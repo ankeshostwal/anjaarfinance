@@ -40,15 +40,37 @@ export default function ContractsScreen() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState('date');
   const [showFilterModal, setShowFilterModal] = useState(false);
-  const { token, logout } = useAuth();
+  const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!token) {
-      router.replace('/');
-      return;
+    autoLogin();
+  }, []);
+
+  const autoLogin = async () => {
+    try {
+      // Try to get existing token
+      const storage = Platform.OS === 'web' ? localStorage : null;
+      let existingToken = storage ? storage.getItem('auth_token') : null;
+      
+      if (!existingToken) {
+        // Auto-login with demo credentials
+        const response = await axios.post(`${BACKEND_URL}/api/auth/login`, {
+          username: 'admin',
+          password: 'admin123'
+        });
+        existingToken = response.data.access_token;
+        if (storage) {
+          storage.setItem('auth_token', existingToken);
+        }
+      }
+      
+      setToken(existingToken);
+      fetchContracts(existingToken);
+    } catch (error) {
+      console.error('Auto-login error:', error);
+      fetchContracts(null);
     }
-    fetchContracts();
-  }, [token]);
+  };
 
   useEffect(() => {
     filterAndSortContracts();
