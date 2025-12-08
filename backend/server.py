@@ -358,7 +358,9 @@ async def seed_sample_data():
             ),
             payment_schedule=payment_schedule
         )
-        contracts.append(contract.dict())
+        contract_dict = contract.dict()
+        contract_dict['company_name'] = company_name
+        contracts.append(contract_dict)
     
     # Insert into database
     await db.contracts.insert_many(contracts)
