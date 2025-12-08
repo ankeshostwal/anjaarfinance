@@ -108,7 +108,8 @@ class ContractListItem(BaseModel):
     id: str
     contract_number: str
     customer_name: str
-    vehicle_name: str
+    vehicle_registration: str
+    company_name: str
     status: str
     outstanding_amount: float
     emi_amount: float
