@@ -179,47 +179,30 @@ export default function ContractsScreen() {
 
   const renderContract = ({ item }: { item: ContractListItem }) => (
     <TouchableOpacity
-      style={styles.contractCard}
+      style={styles.tableRow}
       onPress={() => router.push({ pathname: '/contract-detail', params: { contractId: item.id } })}
     >
-      <View style={styles.contractHeader}>
-        <View style={styles.contractHeaderLeft}>
-          <Text style={styles.contractNumber}>{item.contract_number}</Text>
-          <View style={getStatusBadgeStyle(item.status)}>
-            <Text style={getStatusTextStyle(item.status)}>
-              {item.status.toUpperCase()}
-            </Text>
-          </View>
-        </View>
-        <Ionicons name="chevron-forward" size={24} color="#999" />
+      <View style={styles.tableCell1}>
+        <Text style={styles.cellText}>{item.contract_number}</Text>
       </View>
-
-      <View style={styles.contractBody}>
-        <View style={styles.infoRow}>
-          <Ionicons name="person" size={16} color="#666" />
-          <Text style={styles.infoText}>{item.customer_name}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Ionicons name="car" size={16} color="#666" />
-          <Text style={styles.infoText}>{item.vehicle_name}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Ionicons name="calendar" size={16} color="#666" />
-          <Text style={styles.infoText}>{item.contract_date}</Text>
-        </View>
+      <View style={styles.tableCell2}>
+        <Text style={styles.cellText}>{item.customer_name}</Text>
       </View>
-
-      <View style={styles.contractFooter}>
-        <View style={styles.amountBox}>
-          <Text style={styles.amountLabel}>EMI</Text>
-          <Text style={styles.amountValue}>₹{item.emi_amount.toLocaleString()}</Text>
-        </View>
-        <View style={styles.amountBox}>
-          <Text style={styles.amountLabel}>Outstanding</Text>
-          <Text style={[styles.amountValue, styles.outstandingAmount]}>
-            ₹{item.outstanding_amount.toLocaleString()}
+      <View style={styles.tableCell3}>
+        <Text style={styles.cellText}>{item.vehicle_name}</Text>
+      </View>
+      <View style={styles.tableCell4}>
+        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) + '20' }]}>
+          <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
+            {item.status.toUpperCase()}
           </Text>
         </View>
+      </View>
+      <View style={styles.tableCell5}>
+        <Text style={styles.cellTextAmount}>₹{item.emi_amount.toLocaleString()}</Text>
+      </View>
+      <View style={styles.tableCell6}>
+        <Text style={[styles.cellTextAmount, styles.outstandingText]}>₹{item.outstanding_amount.toLocaleString()}</Text>
       </View>
     </TouchableOpacity>
   );
