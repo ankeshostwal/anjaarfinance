@@ -268,6 +268,31 @@ export default function ContractsScreen() {
           </View>
 
           <View style={styles.filterSection}>
+            <Text style={styles.filterLabel}>Company Filter</Text>
+            <View style={styles.filterButtons}>
+              {['all', ...companies].map((company) => (
+                <TouchableOpacity
+                  key={company}
+                  style={[
+                    styles.filterButton,
+                    companyFilter === company && styles.filterButtonActive
+                  ]}
+                  onPress={() => setCompanyFilter(company)}
+                >
+                  <Text
+                    style={[
+                      styles.filterButtonText,
+                      companyFilter === company && styles.filterButtonTextActive
+                    ]}
+                  >
+                    {company === 'all' ? 'ALL' : company}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.filterSection}>
             <Text style={styles.filterLabel}>Sort By</Text>
             <View style={styles.filterButtons}>
               {[
