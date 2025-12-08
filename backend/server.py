@@ -247,10 +247,8 @@ async def get_contract_detail(
 @api_router.post("/seed-data")
 async def seed_sample_data():
     """Generate sample data for testing"""
-    # Check if data already exists
-    existing_count = await db.contracts.count_documents({})
-    if existing_count > 0:
-        return {"message": f"Data already exists ({existing_count} contracts)", "created": False}
+    # Clear existing data first
+    await db.contracts.delete_many({})
     
     # Create default user
     existing_user = await db.users.find_one({"username": "admin"})
