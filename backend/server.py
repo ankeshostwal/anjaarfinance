@@ -320,6 +320,8 @@ async def seed_sample_data():
                 paid_date=paid_date
             ).dict())
         
+        company_name = random.choice(companies)
+        
         contract = Contract(
             contract_number=f"VF{2023}{str(i+1).zfill(4)}",
             contract_date=contract_date.strftime("%Y-%m-%d"),
