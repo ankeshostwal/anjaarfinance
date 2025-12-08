@@ -160,7 +160,7 @@ export default function Index() {
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity
+            <Pressable
               style={[styles.loginButton, loading && styles.loginButtonDisabled]}
               onPress={handleLogin}
               disabled={loading}
@@ -170,7 +170,7 @@ export default function Index() {
               ) : (
                 <Text style={styles.loginButtonText}>Login</Text>
               )}
-            </TouchableOpacity>
+            </Pressable>
 
             <View style={styles.demoCredentials}>
               <Text style={styles.demoTitle}>Demo Credentials:</Text>
