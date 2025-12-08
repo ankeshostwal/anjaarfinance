@@ -340,21 +340,44 @@ export default function ContractsScreen() {
         )}
       </View>
 
-      <FlatList
-        data={filteredContracts}
-        renderItem={renderContract}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Ionicons name="document-text-outline" size={64} color="#ccc" />
-            <Text style={styles.emptyText}>No contracts found</Text>
+      <View style={styles.tableContainer}>
+        <View style={styles.tableHeader}>
+          <View style={styles.tableCell1}>
+            <Text style={styles.headerText}>Contract No</Text>
           </View>
-        }
-      />
+          <View style={styles.tableCell2}>
+            <Text style={styles.headerText}>Customer</Text>
+          </View>
+          <View style={styles.tableCell3}>
+            <Text style={styles.headerText}>Vehicle</Text>
+          </View>
+          <View style={styles.tableCell4}>
+            <Text style={styles.headerText}>Status</Text>
+          </View>
+          <View style={styles.tableCell5}>
+            <Text style={styles.headerText}>EMI</Text>
+          </View>
+          <View style={styles.tableCell6}>
+            <Text style={styles.headerText}>Outstanding</Text>
+          </View>
+        </View>
+
+        <FlatList
+          data={filteredContracts}
+          renderItem={renderContract}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContent}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Ionicons name="document-text-outline" size={64} color="#ccc" />
+              <Text style={styles.emptyText}>No contracts found</Text>
+            </View>
+          }
+        />
+      </View>
 
       <FilterModal />
     </SafeAreaView>
