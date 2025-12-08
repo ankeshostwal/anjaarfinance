@@ -40,9 +40,11 @@ export default function ContractsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [companyFilter, setCompanyFilter] = useState('all');
   const [sortBy, setSortBy] = useState('date');
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [token, setToken] = useState<string | null>(null);
+  const [companies, setCompanies] = useState<string[]>([]);
 
   useEffect(() => {
     autoLogin();
