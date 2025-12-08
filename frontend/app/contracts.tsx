@@ -350,22 +350,19 @@ export default function ContractsScreen() {
       <View style={styles.tableContainer}>
         <View style={styles.tableHeader}>
           <View style={styles.tableCell1}>
-            <Text style={styles.headerText}>Contract No</Text>
+            <Text style={styles.headerText}>S. No</Text>
           </View>
           <View style={styles.tableCell2}>
-            <Text style={styles.headerText}>Customer</Text>
+            <Text style={styles.headerText}>Customer Name</Text>
           </View>
           <View style={styles.tableCell3}>
-            <Text style={styles.headerText}>Vehicle</Text>
+            <Text style={styles.headerText}>Vehicle Number</Text>
           </View>
           <View style={styles.tableCell4}>
-            <Text style={styles.headerText}>Status</Text>
+            <Text style={styles.headerText}>File Number</Text>
           </View>
           <View style={styles.tableCell5}>
-            <Text style={styles.headerText}>EMI</Text>
-          </View>
-          <View style={styles.tableCell6}>
-            <Text style={styles.headerText}>Outstanding</Text>
+            <Text style={styles.headerText}>Name of Company</Text>
           </View>
         </View>
 
