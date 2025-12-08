@@ -84,7 +84,13 @@ export default function ContractsScreen() {
 
   useEffect(() => {
     filterAndSortContracts();
-  }, [searchQuery, statusFilter, sortBy, contracts]);
+  }, [searchQuery, statusFilter, companyFilter, sortBy, contracts]);
+
+  useEffect(() => {
+    // Extract unique companies from contracts
+    const uniqueCompanies = [...new Set(contracts.map(c => c.company_name))];
+    setCompanies(uniqueCompanies);
+  }, [contracts]);
 
   const fetchContracts = async (authToken?: string | null) => {
     try {
@@ -113,25 +119,36 @@ export default function ContractsScreen() {
   const filterAndSortContracts = () => {
     let filtered = [...contracts];
 
+    // Apply status filter
     if (statusFilter !== 'all') {
       filtered = filtered.filter(c => c.status === statusFilter);
     }
 
+    // Apply company filter
+    if (companyFilter !== 'all') {
+      filtered = filtered.filter(c => c.company_name === companyFilter);
+    }
+
+    // Apply search
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(c => 
         c.customer_name.toLowerCase().includes(query) ||
         c.contract_number.toLowerCase().includes(query) ||
-        c.vehicle_name.toLowerCase().includes(query)
+        c.vehicle_registration.toLowerCase().includes(query) ||
+        c.company_name.toLowerCase().includes(query)
       );
     }
 
+    // Apply sorting
     if (sortBy === 'date') {
       filtered.sort((a, b) => new Date(b.contract_date).getTime() - new Date(a.contract_date).getTime());
     } else if (sortBy === 'customer') {
       filtered.sort((a, b) => a.customer_name.localeCompare(b.customer_name));
     } else if (sortBy === 'amount') {
       filtered.sort((a, b) => b.outstanding_amount - a.outstanding_amount);
+    } else if (sortBy === 'company') {
+      filtered.sort((a, b) => a.company_name.localeCompare(b.company_name));
     }
 
     setFilteredContracts(filtered);
