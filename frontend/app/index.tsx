@@ -13,7 +13,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 import { useAuth } from './context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -25,26 +24,15 @@ export default function Index() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [initializing, setInitializing] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
-  const { login } = useAuth();
+  const { token } = useAuth();
 
+  // Check if already logged in
   useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
-    try {
-      const token = await SecureStore.getItemAsync('auth_token');
-      if (token) {
-        router.replace('/contracts');
-      }
-    } catch (error) {
-      console.error('Error checking auth:', error);
-    } finally {
-      setInitializing(false);
+    if (token) {
+      router.replace('/contracts');
     }
-  };
+  }, [token]);
 
   const handleLogin = async () => {
     if (!username.trim() || !password.trim()) {
