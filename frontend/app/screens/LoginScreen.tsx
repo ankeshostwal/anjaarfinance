@@ -12,13 +12,15 @@ import {
   ScrollView
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import axios from 'axios';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from './context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
-export default function LoginScreen({ navigation }: any) {
+export default function LoginScreen() {
+  const router = useRouter();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -41,7 +43,7 @@ export default function LoginScreen({ navigation }: any) {
       const { access_token, username: user } = response.data;
       await login(user, access_token);
       
-      navigation.replace('ContractsList');
+      router.replace('/contracts');
     } catch (error: any) {
       console.error('Login error:', error);
       Alert.alert(
