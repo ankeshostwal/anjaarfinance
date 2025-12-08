@@ -185,32 +185,25 @@ export default function ContractsScreen() {
     };
   };
 
-  const renderContract = ({ item }: { item: ContractListItem }) => (
+  const renderContract = ({ item, index }: { item: ContractListItem; index: number }) => (
     <TouchableOpacity
       style={styles.tableRow}
       onPress={() => router.push({ pathname: '/contract-detail', params: { contractId: item.id } })}
     >
       <View style={styles.tableCell1}>
-        <Text style={styles.cellText}>{item.contract_number}</Text>
+        <Text style={styles.cellText}>{index + 1}</Text>
       </View>
       <View style={styles.tableCell2}>
         <Text style={styles.cellText}>{item.customer_name}</Text>
       </View>
       <View style={styles.tableCell3}>
-        <Text style={styles.cellText}>{item.vehicle_name}</Text>
+        <Text style={styles.cellText}>{item.vehicle_registration}</Text>
       </View>
       <View style={styles.tableCell4}>
-        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) + '20' }]}>
-          <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
-            {item.status.toUpperCase()}
-          </Text>
-        </View>
+        <Text style={styles.cellText}>{item.contract_number}</Text>
       </View>
       <View style={styles.tableCell5}>
-        <Text style={styles.cellTextAmount}>₹{item.emi_amount.toLocaleString()}</Text>
-      </View>
-      <View style={styles.tableCell6}>
-        <Text style={[styles.cellTextAmount, styles.outstandingText]}>₹{item.outstanding_amount.toLocaleString()}</Text>
+        <Text style={styles.cellText}>{item.company_name}</Text>
       </View>
     </TouchableOpacity>
   );
