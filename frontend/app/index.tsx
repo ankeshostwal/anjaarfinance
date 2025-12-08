@@ -135,6 +135,7 @@ export default function Index() {
                 onChangeText={setUsername}
                 autoCapitalize="none"
                 autoCorrect={false}
+                onSubmitEditing={handleLogin}
               />
             </View>
 
@@ -147,8 +148,9 @@ export default function Index() {
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
+                onSubmitEditing={handleLogin}
               />
-              <TouchableOpacity
+              <Pressable
                 onPress={() => setShowPassword(!showPassword)}
                 style={styles.eyeIcon}
               >
@@ -157,12 +159,13 @@ export default function Index() {
                   size={20} 
                   color="#666" 
                 />
-              </TouchableOpacity>
+              </Pressable>
             </View>
 
             <Pressable
               style={[styles.loginButton, loading && styles.loginButtonDisabled]}
               onPress={handleLogin}
+              onPressIn={handleLogin}
               disabled={loading}
             >
               {loading ? (
@@ -176,6 +179,9 @@ export default function Index() {
               <Text style={styles.demoTitle}>Demo Credentials:</Text>
               <Text style={styles.demoText}>Username: admin</Text>
               <Text style={styles.demoText}>Password: admin123</Text>
+              <Pressable onPress={handleLogin} style={{marginTop: 8, padding: 8, backgroundColor: '#4CAF50', borderRadius: 8}}>
+                <Text style={{color: '#fff', textAlign: 'center', fontWeight: '600'}}>Quick Login (Click Here)</Text>
+              </Pressable>
             </View>
           </View>
         </ScrollView>
