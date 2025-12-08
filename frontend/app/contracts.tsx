@@ -473,12 +473,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   tableCell1: {
-    width: '15%',
+    width: '10%',
     justifyContent: 'center',
+    alignItems: 'center',
     paddingHorizontal: 4,
   },
   tableCell2: {
-    width: '20%',
+    width: '25%',
     justifyContent: 'center',
     paddingHorizontal: 4,
   },
@@ -488,21 +489,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   tableCell4: {
-    width: '15%',
+    width: '20%',
     justifyContent: 'center',
-    alignItems: 'center',
     paddingHorizontal: 4,
   },
   tableCell5: {
-    width: '15%',
+    width: '25%',
     justifyContent: 'center',
-    alignItems: 'flex-end',
-    paddingHorizontal: 4,
-  },
-  tableCell6: {
-    width: '15%',
-    justifyContent: 'center',
-    alignItems: 'flex-end',
     paddingHorizontal: 4,
   },
   headerText: {
