@@ -24,7 +24,8 @@ interface ContractListItem {
   id: string;
   contract_number: string;
   customer_name: string;
-  vehicle_name: string;
+  vehicle_registration: string;
+  company_name: string;
   status: string;
   outstanding_amount: number;
   emi_amount: number;
