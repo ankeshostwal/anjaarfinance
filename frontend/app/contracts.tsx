@@ -76,12 +76,13 @@ export default function ContractsScreen() {
     filterAndSortContracts();
   }, [searchQuery, statusFilter, sortBy, contracts]);
 
-  const fetchContracts = async () => {
+  const fetchContracts = async (authToken?: string | null) => {
     try {
+      const tkn = authToken || token;
       const response = await axios.get(
         `${BACKEND_URL}/api/contracts`,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: tkn ? { Authorization: `Bearer ${tkn}` } : {},
           params: {
             search: searchQuery || undefined,
             status_filter: statusFilter !== 'all' ? statusFilter : undefined,
@@ -93,11 +94,6 @@ export default function ContractsScreen() {
       setFilteredContracts(response.data);
     } catch (error: any) {
       console.error('Error fetching contracts:', error);
-      if (error.response?.status === 401) {
-        Alert.alert('Session Expired', 'Please login again');
-        await logout();
-        router.replace('/');
-      }
     } finally {
       setLoading(false);
       setRefreshing(false);
