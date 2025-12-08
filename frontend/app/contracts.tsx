@@ -255,6 +255,7 @@ export default function ContractsScreen() {
                 { key: 'date', label: 'Date' },
                 { key: 'customer', label: 'Customer' },
                 { key: 'amount', label: 'Amount' },
+                { key: 'company', label: 'Company' },
               ].map((sort) => (
                 <TouchableOpacity
                   key={sort.key}
