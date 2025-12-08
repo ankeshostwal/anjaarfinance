@@ -1,30 +1,38 @@
-import { Text, View, StyleSheet, Image } from "react-native";
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import LoginScreen from './screens/LoginScreen';
+import ContractsListScreen from './screens/ContractsListScreen';
+import ContractDetailScreen from './screens/ContractDetailScreen';
+import { AuthProvider } from './context/AuthContext';
 
-const EXPO_PUBLIC_BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+const Stack = createNativeStackNavigator();
 
 export default function Index() {
-  console.log(EXPO_PUBLIC_BACKEND_URL, "EXPO_PUBLIC_BACKEND_URL");
-
   return (
-    <View style={styles.container}>
-      <Image
-        source={require("../assets/images/app-image.png")}
-        style={styles.image}
-      />
-    </View>
+    <AuthProvider>
+      <NavigationContainer independent={true}>
+        <Stack.Navigator initialRouteName="Login">
+          <Stack.Screen 
+            name="Login" 
+            component={LoginScreen} 
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen 
+            name="ContractsList" 
+            component={ContractsListScreen}
+            options={{ 
+              title: 'Vehicle Finance Contracts',
+              headerBackVisible: false
+            }}
+          />
+          <Stack.Screen 
+            name="ContractDetail" 
+            component={ContractDetailScreen}
+            options={{ title: 'Contract Details' }}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </AuthProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#0c0c0c",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  image: {
-    width: "100%",
-    height: "100%",
-    resizeMode: "contain",
-  },
-});
