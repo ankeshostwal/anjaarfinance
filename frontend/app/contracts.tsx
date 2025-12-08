@@ -163,10 +163,9 @@ export default function ContractsScreen() {
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return '#4CAF50';
-      case 'completed': return '#2196F3';
-      case 'overdue': return '#F44336';
+    switch (status.toLowerCase()) {
+      case 'live': return '#4CAF50';
+      case 'seized': return '#F44336';
       default: return '#757575';
     }
   };
