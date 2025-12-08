@@ -59,9 +59,34 @@ export default function Index() {
         router.replace('/contracts');
         return;
       }
+      
+      // Auto-login with demo credentials if no token
+      console.log('No token found, attempting auto-login...');
+      await autoLogin();
     } catch (error) {
       console.error('Error checking auth:', error);
-    } finally {
+      setInitializing(false);
+    }
+  };
+
+  const autoLogin = async () => {
+    try {
+      console.log('Auto-login starting...');
+      const response = await axios.post(`${BACKEND_URL}/api/auth/login`, {
+        username: 'admin',
+        password: 'admin123'
+      });
+
+      console.log('Auto-login successful!', response.data);
+      const { access_token, username: user } = response.data;
+      
+      await storage.setItem('auth_token', access_token);
+      await storage.setItem('username', user);
+      
+      console.log('Redirecting to contracts...');
+      router.replace('/contracts');
+    } catch (error) {
+      console.error('Auto-login failed:', error);
       setInitializing(false);
     }
   };
