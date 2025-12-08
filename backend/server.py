@@ -267,6 +267,7 @@ async def seed_sample_data():
     vehicle_models = ["Swift", "i20", "Nexon", "XUV300", "City", "Venue", "Altroz", "Scorpio"]
     colors = ["White", "Silver", "Black", "Red", "Blue"]
     relations = ["Father", "Brother", "Uncle", "Friend", "Colleague"]
+    companies = ["HDFC Bank", "ICICI Bank", "SBI Auto Finance", "Bajaj Finance", "Kotak Mahindra"]
     
     contracts = []
     base_date = datetime(2023, 1, 1)
