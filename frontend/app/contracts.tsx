@@ -452,79 +452,86 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   listContent: {
-    padding: 16,
+    paddingBottom: 16,
   },
-  contractCard: {
+  tableContainer: {
+    flex: 1,
     backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
-  contractHeader: {
+  tableHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
+    backgroundColor: '#2196F3',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderBottomWidth: 2,
+    borderBottomColor: '#1976D2',
   },
-  contractHeaderLeft: {
+  tableRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+    backgroundColor: '#fff',
   },
-  contractNumber: {
-    fontSize: 18,
+  tableCell1: {
+    width: '15%',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  tableCell2: {
+    width: '20%',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  tableCell3: {
+    width: '20%',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  tableCell4: {
+    width: '15%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  tableCell5: {
+    width: '15%',
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+    paddingHorizontal: 4,
+  },
+  tableCell6: {
+    width: '15%',
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+    paddingHorizontal: 4,
+  },
+  headerText: {
+    fontSize: 12,
     fontWeight: 'bold',
+    color: '#fff',
+  },
+  cellText: {
+    fontSize: 11,
     color: '#333',
-    marginRight: 12,
+  },
+  cellTextAmount: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#333',
+  },
+  outstandingText: {
+    color: '#F44336',
   },
   statusBadge: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: 8,
   },
   statusText: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: '600',
-  },
-  contractBody: {
-    marginBottom: 12,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  infoText: {
-    fontSize: 14,
-    color: '#666',
-    marginLeft: 8,
-  },
-  contractFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-  },
-  amountBox: {
-    flex: 1,
-  },
-  amountLabel: {
-    fontSize: 12,
-    color: '#999',
-    marginBottom: 4,
-  },
-  amountValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  outstandingAmount: {
-    color: '#F44336',
   },
   emptyContainer: {
     alignItems: 'center',
