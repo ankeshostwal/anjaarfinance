@@ -383,6 +383,11 @@ export default function ContractsScreen() {
             <Text style={styles.activeFilterText}>{statusFilter}</Text>
           </View>
         )}
+        {companyFilter !== 'all' && (
+          <View style={styles.activeFilterBadge}>
+            <Text style={styles.activeFilterText}>{companyFilter}</Text>
+          </View>
+        )}
       </View>
 
       <View style={styles.tableContainer}>
