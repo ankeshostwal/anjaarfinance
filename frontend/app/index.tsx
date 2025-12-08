@@ -35,20 +35,24 @@ export default function Index() {
   }, [token]);
 
   const handleLogin = async () => {
+    console.log('handleLogin called');
     if (!username.trim() || !password.trim()) {
       Alert.alert('Error', 'Please enter both username and password');
       return;
     }
 
     setLoading(true);
+    console.log('Making login request to:', `${BACKEND_URL}/api/auth/login`);
     try {
       const response = await axios.post(`${BACKEND_URL}/api/auth/login`, {
         username: username.trim(),
         password: password
       });
 
+      console.log('Login response:', response.data);
       const { access_token, username: user } = response.data;
       await login(user, access_token);
+      console.log('Calling router.replace to /contracts');
       
       router.replace('/contracts');
     } catch (error: any) {
