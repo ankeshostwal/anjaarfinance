@@ -290,13 +290,14 @@ async def seed_sample_data():
         amount_paid = emi * months_elapsed
         outstanding = total_amount - amount_paid
         
-        # Determine status
+        # Determine status - Only Live or Seized (no completed)
         if months_elapsed >= tenure:
-            status = "completed"
-        elif months_elapsed > 0 and random.random() < 0.2:
-            status = "overdue"
+            # Skip completed agreements
+            continue
+        elif random.random() < 0.3:
+            status = "seized"
         else:
-            status = "active"
+            status = "live"
         
         # Generate payment schedule
         payment_schedule = []
