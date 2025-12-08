@@ -226,7 +226,7 @@ export default function ContractsScreen() {
           <View style={styles.filterSection}>
             <Text style={styles.filterLabel}>Status Filter</Text>
             <View style={styles.filterButtons}>
-              {['all', 'active', 'completed', 'overdue'].map((status) => (
+              {['all', 'live', 'seized'].map((status) => (
                 <TouchableOpacity
                   key={status}
                   style={[
