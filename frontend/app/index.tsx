@@ -14,25 +14,56 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import axios from 'axios';
-import { useAuth } from './context/AuthContext';
+import * as SecureStore from 'expo-secure-store';
 import { Ionicons } from '@expo/vector-icons';
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+
+// Cross-platform storage helper
+const storage = {
+  async getItem(key: string): Promise<string | null> {
+    if (Platform.OS === 'web') {
+      return localStorage.getItem(key);
+    }
+    return await SecureStore.getItemAsync(key);
+  },
+  
+  async setItem(key: string, value: string): Promise<void> {
+    if (Platform.OS === 'web') {
+      localStorage.setItem(key, value);
+    } else {
+      await SecureStore.setItemAsync(key, value);
+    }
+  }
+};
 
 export default function Index() {
   const router = useRouter();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [initializing, setInitializing] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
-  const { token } = useAuth();
 
   // Check if already logged in
   useEffect(() => {
-    if (token) {
-      router.replace('/contracts');
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    try {
+      const token = await storage.getItem('auth_token');
+      if (token) {
+        console.log('Token found, redirecting to contracts');
+        router.replace('/contracts');
+        return;
+      }
+    } catch (error) {
+      console.error('Error checking auth:', error);
+    } finally {
+      setInitializing(false);
     }
-  }, [token]);
+  };
 
   const handleLogin = async () => {
     console.log('handleLogin called');
@@ -51,9 +82,12 @@ export default function Index() {
 
       console.log('Login response:', response.data);
       const { access_token, username: user } = response.data;
-      await login(user, access_token);
-      console.log('Calling router.replace to /contracts');
       
+      // Store auth data
+      await storage.setItem('auth_token', access_token);
+      await storage.setItem('username', user);
+      
+      console.log('Auth data stored, redirecting to /contracts');
       router.replace('/contracts');
     } catch (error: any) {
       console.error('Login error:', error);
@@ -65,6 +99,14 @@ export default function Index() {
       setLoading(false);
     }
   };
+
+  if (initializing) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#2196F3" />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
