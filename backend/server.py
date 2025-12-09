@@ -244,6 +244,24 @@ async def get_contract_detail(
     contract.pop('_id', None)
     return Contract(**contract)
 
+@api_router.post("/import-data")
+async def import_data(contracts_data: List[dict]):
+    """Import contracts data from converted file"""
+    try:
+        # Clear existing data
+        await db.contracts.delete_many({})
+        
+        # Insert new data
+        if contracts_data:
+            await db.contracts.insert_many(contracts_data)
+        
+        return {
+            "message": "Data imported successfully",
+            "contracts_imported": len(contracts_data)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Import failed: {str(e)}")
+
 @api_router.post("/seed-data")
 async def seed_sample_data():
     """Generate sample data for testing"""
