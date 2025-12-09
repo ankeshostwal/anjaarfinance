@@ -513,52 +513,78 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 4,
   },
-  paymentRow: {
+  paymentTableHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
+    backgroundColor: '#2196F3',
+    paddingVertical: 6,
+    paddingHorizontal: 2,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1976D2',
+  },
+  paymentTableRow: {
+    flexDirection: 'row',
+    paddingVertical: 6,
+    paddingHorizontal: 2,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
-  paymentLeft: {
+  paymentTotalRow: {
     flexDirection: 'row',
+    backgroundColor: '#E3F2FD',
+    paddingVertical: 8,
+    paddingHorizontal: 2,
+    borderTopWidth: 2,
+    borderTopColor: '#2196F3',
+  },
+  paymentCell1: {
+    width: '10%',
+    justifyContent: 'center',
     alignItems: 'center',
-    flex: 1,
+    paddingHorizontal: 2,
   },
-  paymentNumber: {
-    fontSize: 16,
+  paymentCell2: {
+    width: '20%',
+    justifyContent: 'center',
+    paddingHorizontal: 2,
+  },
+  paymentCell3: {
+    width: '18%',
+    justifyContent: 'center',
+    paddingHorizontal: 2,
+  },
+  paymentCell4: {
+    width: '18%',
+    justifyContent: 'center',
+    paddingHorizontal: 2,
+  },
+  paymentCell5: {
+    width: '18%',
+    justifyContent: 'center',
+    paddingHorizontal: 2,
+  },
+  paymentCell6: {
+    width: '16%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 2,
+  },
+  paymentHeaderText: {
+    fontSize: 9,
     fontWeight: 'bold',
+    color: '#fff',
+  },
+  paymentCellText: {
+    fontSize: 9,
     color: '#333',
-    marginRight: 12,
-    width: 40,
   },
-  paymentDate: {
-    fontSize: 14,
-    color: '#666',
-  },
-  paidDate: {
-    fontSize: 12,
-    color: '#4CAF50',
-    marginTop: 2,
-  },
-  paymentRight: {
-    alignItems: 'flex-end',
-  },
-  paymentAmount: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
-  },
-  paymentStatus: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  paymentStatusText: {
+  paymentTotalText: {
     fontSize: 10,
-    fontWeight: '600',
+    fontWeight: 'bold',
+    color: '#1976D2',
+  },
+  delayText: {
+    color: '#F44336',
+    fontWeight: 'bold',
   },
   imageModalOverlay: {
     flex: 1,
