@@ -1,0 +1,47 @@
+name: Build AnjaarFinance APK
+
+on:
+  # Trigger build when you push to main branch
+  push:
+    branches:
+      - main
+  
+  # Or manually trigger from GitHub Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 🔍 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: 🔧 Setup Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 📦 Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: 🏗️ Build Android APK
+        working-directory: ./frontend
+        run: eas build --platform android --profile preview --non-interactive --no-wait
+
+      - name: ✅ Build submitted
+        run: |
+          echo "✅ APK build has been submitted to Expo!"
+          echo "📱 Check build status at: https://expo.dev/accounts/ankeshostwal/projects/anjaarfinance/builds"
+          echo "⏰ Build will take approximately 15-20 minutes"
+          echo "📥 Download APK from Expo dashboard when ready"
