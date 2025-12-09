@@ -3,23 +3,19 @@
     "version": ">= 5.2.0"
   },
   "build": {
-    "development": {
-      "developmentClient": true,
-      "distribution": "internal"
-    },
     "preview": {
       "distribution": "internal",
       "android": {
-        "buildType": "apk"
-      }
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease"
+      },
+      "node": "20.18.0"
     },
     "production": {
       "android": {
-        "buildType": "app-bundle"
-      }
+        "buildType": "apk"
+      },
+      "node": "20.18.0"
     }
-  },
-  "submit": {
-    "production": {}
   }
 }
