@@ -296,27 +296,104 @@ export default function ContractDetailScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Payment Schedule</Text>
           <View style={styles.card}>
-            {contract.payment_schedule.map((payment, index) => (
-              <View key={index} style={styles.paymentRow}>
-                <View style={styles.paymentLeft}>
-                  <Text style={styles.paymentNumber}>#{payment.installment_number}</Text>
-                  <View>
-                    <Text style={styles.paymentDate}>{payment.due_date}</Text>
-                    {payment.paid_date && (
-                      <Text style={styles.paidDate}>Paid: {payment.paid_date}</Text>
-                    )}
+            {/* Table Header */}
+            <View style={styles.paymentTableHeader}>
+              <View style={styles.paymentCell1}>
+                <Text style={styles.paymentHeaderText}>S.No</Text>
+              </View>
+              <View style={styles.paymentCell2}>
+                <Text style={styles.paymentHeaderText}>EMI Amount</Text>
+              </View>
+              <View style={styles.paymentCell3}>
+                <Text style={styles.paymentHeaderText}>Due Date</Text>
+              </View>
+              <View style={styles.paymentCell4}>
+                <Text style={styles.paymentHeaderText}>Payment Received</Text>
+              </View>
+              <View style={styles.paymentCell5}>
+                <Text style={styles.paymentHeaderText}>Date Received</Text>
+              </View>
+              <View style={styles.paymentCell6}>
+                <Text style={styles.paymentHeaderText}>Delay (Days)</Text>
+              </View>
+            </View>
+
+            {/* Table Rows */}
+            {contract.payment_schedule.map((payment, index) => {
+              const delayDays = payment.paid_date && payment.due_date 
+                ? Math.max(0, Math.floor((new Date(payment.paid_date).getTime() - new Date(payment.due_date).getTime()) / (1000 * 60 * 60 * 24)))
+                : (payment.status === 'overdue' 
+                    ? Math.floor((new Date().getTime() - new Date(payment.due_date).getTime()) / (1000 * 60 * 60 * 24))
+                    : 0);
+              
+              return (
+                <View key={index} style={styles.paymentTableRow}>
+                  <View style={styles.paymentCell1}>
+                    <Text style={styles.paymentCellText}>{payment.installment_number}</Text>
                   </View>
-                </View>
-                <View style={styles.paymentRight}>
-                  <Text style={styles.paymentAmount}>₹{payment.amount.toLocaleString()}</Text>
-                  <View style={[styles.paymentStatus, { backgroundColor: getStatusColor(payment.status) + '20' }]}>
-                    <Text style={[styles.paymentStatusText, { color: getStatusColor(payment.status) }]}>
-                      {payment.status.toUpperCase()}
+                  <View style={styles.paymentCell2}>
+                    <Text style={styles.paymentCellText}>₹{payment.amount.toLocaleString()}</Text>
+                  </View>
+                  <View style={styles.paymentCell3}>
+                    <Text style={styles.paymentCellText}>{payment.due_date}</Text>
+                  </View>
+                  <View style={styles.paymentCell4}>
+                    <Text style={styles.paymentCellText}>
+                      {payment.status === 'paid' ? `₹${payment.amount.toLocaleString()}` : '-'}
+                    </Text>
+                  </View>
+                  <View style={styles.paymentCell5}>
+                    <Text style={styles.paymentCellText}>
+                      {payment.paid_date || '-'}
+                    </Text>
+                  </View>
+                  <View style={styles.paymentCell6}>
+                    <Text style={[
+                      styles.paymentCellText,
+                      delayDays > 0 && styles.delayText
+                    ]}>
+                      {delayDays > 0 ? delayDays : '-'}
                     </Text>
                   </View>
                 </View>
+              );
+            })}
+
+            {/* Total Row */}
+            <View style={styles.paymentTotalRow}>
+              <View style={styles.paymentCell1}>
+                <Text style={styles.paymentTotalText}>Total</Text>
               </View>
-            ))}
+              <View style={styles.paymentCell2}>
+                <Text style={styles.paymentTotalText}>
+                  ₹{contract.payment_schedule.reduce((sum, p) => sum + p.amount, 0).toLocaleString()}
+                </Text>
+              </View>
+              <View style={styles.paymentCell3}>
+                <Text style={styles.paymentTotalText}>-</Text>
+              </View>
+              <View style={styles.paymentCell4}>
+                <Text style={styles.paymentTotalText}>
+                  ₹{contract.payment_schedule
+                    .filter(p => p.status === 'paid')
+                    .reduce((sum, p) => sum + p.amount, 0)
+                    .toLocaleString()}
+                </Text>
+              </View>
+              <View style={styles.paymentCell5}>
+                <Text style={styles.paymentTotalText}>-</Text>
+              </View>
+              <View style={styles.paymentCell6}>
+                <Text style={styles.paymentTotalText}>
+                  {contract.payment_schedule.reduce((sum, p) => {
+                    if (p.paid_date && p.due_date) {
+                      return sum + Math.max(0, Math.floor((new Date(p.paid_date).getTime() - new Date(p.due_date).getTime()) / (1000 * 60 * 60 * 24)));
+                    }
+                    return sum;
+                  }, 0)}
+                </Text>
+              </View>
+            </View>
           </View>
         </View>
       </ScrollView>
