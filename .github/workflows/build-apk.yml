@@ -2,6 +2,12 @@ name: Build AnjaarFinance APK
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/build-apk.yml'
 
 jobs:
   build:
@@ -16,6 +22,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22.x'
+          cache: 'yarn'
+          cache-dependency-path: 'frontend/yarn.lock'
 
       - name: 🔧 Setup Expo and EAS
         uses: expo/expo-github-action@v8
@@ -33,7 +41,20 @@ jobs:
 
       - name: ✅ Build submitted
         run: |
-          echo "✅ APK build has been submitted to Expo!"
-          echo "📱 Check build status at: https://expo.dev/accounts/ankeshostwal/projects/anjaarfinance/builds"
+          echo "======================================"
+          echo "✅ APK Build Submitted Successfully!"
+          echo "======================================"
+          echo ""
+          echo "📱 Check build status at:"
+          echo "   https://expo.dev/accounts/ankeshostwal/projects/anjaarfinance/builds"
+          echo ""
           echo "⏰ Build will take approximately 15-20 minutes"
-          echo "📥 Download APK from Expo dashboard when ready"
+          echo ""
+          echo "📥 Steps to get your APK:"
+          echo "   1. Go to the link above"
+          echo "   2. Wait for build to finish"
+          echo "   3. Click 'Download' button"
+          echo "   4. Transfer APK to your Android phone"
+          echo "   5. Install and enjoy!"
+          echo ""
+          echo "======================================"
