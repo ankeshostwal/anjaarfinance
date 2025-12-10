@@ -1,12 +1,6 @@
 name: Build AnjaarFinance APK
 
 on:
-  # Trigger build when you push to main branch
-  push:
-    branches:
-      - main
-  
-  # Or manually trigger from GitHub Actions tab
   workflow_dispatch:
 
 jobs:
@@ -22,8 +16,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22.x'
-          cache: 'yarn'
-          cache-dependency-path: frontend/yarn.lock
 
       - name: 🔧 Setup Expo and EAS
         uses: expo/expo-github-action@v8
