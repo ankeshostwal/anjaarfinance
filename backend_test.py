@@ -425,7 +425,7 @@ class VehicleFinanceAPITester:
 
 def main():
     # Backend URL from the review request
-    backend_url = "https://autoloan-tracker-2.preview.emergentagent.com"
+    backend_url = "https://anjaar-finance.preview.emergentagent.com"
     
     tester = VehicleFinanceAPITester(backend_url)
     summary = tester.run_all_tests()
