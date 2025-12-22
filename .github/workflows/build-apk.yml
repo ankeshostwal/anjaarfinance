@@ -35,17 +35,19 @@ jobs:
         working-directory: ./frontend
         run: yarn install --frozen-lockfile
 
+      - name: 🔍 Check EAS login
+        working-directory: ./frontend
+        run: |
+          echo "Checking Expo authentication..."
+          eas whoami
+
       - name: 🏗️ Build Android APK
         working-directory: ./frontend
         run: |
           echo "Starting EAS build..."
-          eas build --platform android --profile preview --non-interactive || {
-            echo "Build failed, checking configuration..."
-            eas whoami
-            cat eas.json
-            cat app.json
-            exit 1
-          }
+          echo "Project owner: ankeshostwal"
+          echo "Project slug: anjaarfinance"
+          eas build --platform android --profile preview --non-interactive
 
       - name: ✅ Build submitted
         run: |
