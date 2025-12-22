@@ -37,7 +37,15 @@ jobs:
 
       - name: 🏗️ Build Android APK
         working-directory: ./frontend
-        run: eas build --platform android --profile preview --non-interactive --no-wait
+        run: |
+          echo "Starting EAS build..."
+          eas build --platform android --profile preview --non-interactive || {
+            echo "Build failed, checking configuration..."
+            eas whoami
+            cat eas.json
+            cat app.json
+            exit 1
+          }
 
       - name: ✅ Build submitted
         run: |
