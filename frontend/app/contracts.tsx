@@ -95,6 +95,9 @@ export default function ContractsScreen() {
   const fetchContracts = async (authToken?: string | null) => {
     try {
       const tkn = authToken || token;
+      console.log('Fetching contracts from:', `${BACKEND_URL}/api/contracts`);
+      console.log('Token available:', !!tkn);
+      
       const response = await axios.get(
         `${BACKEND_URL}/api/contracts`,
         {
@@ -106,10 +109,14 @@ export default function ContractsScreen() {
           }
         }
       );
+      
+      console.log('Contracts received:', response.data.length);
       setContracts(response.data);
       setFilteredContracts(response.data);
     } catch (error: any) {
-      console.error('Error fetching contracts:', error);
+      console.error('Error fetching contracts:', error.message);
+      console.error('Error details:', error.response?.data);
+      Alert.alert('Error', `Failed to load contracts: ${error.message}`);
     } finally {
       setLoading(false);
       setRefreshing(false);
