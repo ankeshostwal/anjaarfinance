@@ -6,7 +6,9 @@ on:
     branches:
       - main
     paths:
-      - 'frontend/**'
+      - 'app/**'
+      - 'assets/**'
+      - '*.json'
       - '.github/workflows/build-apk.yml'
 
 jobs:
@@ -23,7 +25,7 @@ jobs:
         with:
           node-version: '22.x'
           cache: 'yarn'
-          cache-dependency-path: 'frontend/yarn.lock'
+          cache-dependency-path: 'yarn.lock'
 
       - name: 🔧 Setup Expo and EAS
         uses: expo/expo-github-action@v8
@@ -32,17 +34,14 @@ jobs:
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: 📦 Install dependencies
-        working-directory: ./frontend
         run: yarn install --frozen-lockfile
 
       - name: 🔍 Check EAS login
-        working-directory: ./frontend
         run: |
           echo "Checking Expo authentication..."
           eas whoami
 
       - name: 🏗️ Build Android APK
-        working-directory: ./frontend
         run: |
           echo "Starting EAS build..."
           echo "Project owner: ankeshostwal"
