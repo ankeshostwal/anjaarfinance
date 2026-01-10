@@ -14,7 +14,8 @@
         "buildType": "apk"
       },
       "distribution": "internal",
-      "channel": "preview"
+      "channel": "preview",
+      "node": "22.11.0"
     },
     "production": {
       "android": {
