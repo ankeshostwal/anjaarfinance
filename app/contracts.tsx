@@ -53,32 +53,11 @@ export default function ContractsScreen() {
 
   const autoLogin = async () => {
     try {
-      console.log('autoLogin started');
-      // Try to get existing token
-      const storage = Platform.OS === 'web' ? localStorage : null;
-      let existingToken = storage ? storage.getItem('auth_token') : null;
-      
-      console.log('Existing token:', existingToken ? 'found' : 'not found');
-      
-      if (!existingToken) {
-        // Auto-login with demo credentials
-        console.log('Attempting auto-login...');
-        const response = await axios.post(`${BACKEND_URL}/api/auth/login`, {
-          username: 'admin',
-          password: 'admin123'
-        });
-        existingToken = response.data.access_token;
-        console.log('Auto-login successful, token:', existingToken.substring(0, 20) + '...');
-        if (storage) {
-          storage.setItem('auth_token', existingToken);
-          storage.setItem('username', 'admin');
-        }
-      }
-      
-      setToken(existingToken);
-      fetchContracts(existingToken);
+      console.log('Using mock data for offline mode');
+      setToken('mock-token');
+      fetchContracts('mock-token');
     } catch (error) {
-      console.error('Auto-login error:', error);
+      console.error('Mock data loading error:', error);
       setLoading(false);
     }
   };
