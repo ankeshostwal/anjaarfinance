@@ -8,28 +8,36 @@ export const MOCK_CONTRACTS = [
     "file_number": "FILE-001",
     "company_name": "HDFC Bank",
     "status": "Live",
-    "loan_amount": 500000,
-    "emi_amount": 15000,
-    "start_date": "2024-01-15",
+    "contract_date": "2024-01-15",
     "customer": {
       "name": "Rajesh Kumar",
       "phone": "+91-9876543210",
-      "address": "123 MG Road, Mumbai",
-      "photo_url": null
+      "address": "123 MG Road, Mumbai, Maharashtra",
+      "photo": null
     },
     "guarantor": {
       "name": "Suresh Kumar",
       "phone": "+91-9876543211",
+      "address": "124 MG Road, Mumbai, Maharashtra",
       "relation": "Brother",
-      "photo_url": null
+      "photo": null
     },
     "vehicle": {
       "make": "Maruti Suzuki",
       "model": "Swift",
       "year": 2023,
       "registration_number": "MH-12-AB-1234",
-      "engine_number": "ENG123456",
-      "chassis_number": "CHS789012"
+      "vin": "MA3ERLF1S00123456",
+      "color": "Red"
+    },
+    "loan": {
+      "loan_amount": 500000,
+      "emi_amount": 15000,
+      "interest_rate": 10.5,
+      "tenure_months": 36,
+      "total_amount": 540000,
+      "amount_paid": 45000,
+      "outstanding_amount": 495000
     },
     "payment_schedule": [
       {
@@ -74,19 +82,36 @@ export const MOCK_CONTRACTS = [
     "file_number": "FILE-002",
     "company_name": "ICICI Bank",
     "status": "Live",
-    "loan_amount": 750000,
-    "emi_amount": 22000,
-    "start_date": "2024-02-01",
+    "contract_date": "2024-02-01",
     "customer": {
       "name": "Priya Sharma",
       "phone": "+91-9876543220",
-      "address": "456 Park Street, Pune"
+      "address": "456 Park Street, Pune, Maharashtra",
+      "photo": null
+    },
+    "guarantor": {
+      "name": "Rajesh Sharma",
+      "phone": "+91-9876543221",
+      "address": "457 Park Street, Pune, Maharashtra",
+      "relation": "Father",
+      "photo": null
     },
     "vehicle": {
       "make": "Honda",
       "model": "City",
       "year": 2023,
-      "registration_number": "MH-14-CD-5678"
+      "registration_number": "MH-14-CD-5678",
+      "vin": "MHCH780000123456",
+      "color": "White"
+    },
+    "loan": {
+      "loan_amount": 750000,
+      "emi_amount": 22000,
+      "interest_rate": 9.5,
+      "tenure_months": 36,
+      "total_amount": 792000,
+      "amount_paid": 44000,
+      "outstanding_amount": 748000
     },
     "payment_schedule": [
       {
@@ -115,19 +140,36 @@ export const MOCK_CONTRACTS = [
     "file_number": "FILE-003",
     "company_name": "SBI",
     "status": "Seized",
-    "loan_amount": 600000,
-    "emi_amount": 18000,
-    "start_date": "2023-12-10",
+    "contract_date": "2023-12-10",
     "customer": {
       "name": "Amit Patel",
       "phone": "+91-9876543230",
-      "address": "789 Gandhi Road, Ahmedabad"
+      "address": "789 Gandhi Road, Ahmedabad, Gujarat",
+      "photo": null
+    },
+    "guarantor": {
+      "name": "Vijay Patel",
+      "phone": "+91-9876543231",
+      "address": "790 Gandhi Road, Ahmedabad, Gujarat",
+      "relation": "Brother",
+      "photo": null
     },
     "vehicle": {
       "make": "Hyundai",
       "model": "Creta",
       "year": 2022,
-      "registration_number": "GJ-01-EF-9012"
+      "registration_number": "GJ-01-EF-9012",
+      "vin": "MALHW480000123456",
+      "color": "Black"
+    },
+    "loan": {
+      "loan_amount": 600000,
+      "emi_amount": 18000,
+      "interest_rate": 11.0,
+      "tenure_months": 36,
+      "total_amount": 648000,
+      "amount_paid": 18000,
+      "outstanding_amount": 630000
     },
     "payment_schedule": [
       {
@@ -156,19 +198,36 @@ export const MOCK_CONTRACTS = [
     "file_number": "FILE-004",
     "company_name": "Axis Bank",
     "status": "Live",
-    "loan_amount": 850000,
-    "emi_amount": 25000,
-    "start_date": "2024-03-01",
+    "contract_date": "2024-03-01",
     "customer": {
       "name": "Sneha Reddy",
       "phone": "+91-9876543240",
-      "address": "321 Jubilee Hills, Hyderabad"
+      "address": "321 Jubilee Hills, Hyderabad, Telangana",
+      "photo": null
+    },
+    "guarantor": {
+      "name": "Krishna Reddy",
+      "phone": "+91-9876543241",
+      "address": "322 Jubilee Hills, Hyderabad, Telangana",
+      "relation": "Husband",
+      "photo": null
     },
     "vehicle": {
       "make": "Toyota",
       "model": "Fortuner",
       "year": 2024,
-      "registration_number": "TS-09-GH-3456"
+      "registration_number": "TS-09-GH-3456",
+      "vin": "MHFCW660000123456",
+      "color": "Silver"
+    },
+    "loan": {
+      "loan_amount": 850000,
+      "emi_amount": 25000,
+      "interest_rate": 9.0,
+      "tenure_months": 36,
+      "total_amount": 900000,
+      "amount_paid": 25000,
+      "outstanding_amount": 875000
     },
     "payment_schedule": [
       {
@@ -189,19 +248,36 @@ export const MOCK_CONTRACTS = [
     "file_number": "FILE-005",
     "company_name": "HDFC Bank",
     "status": "Live",
-    "loan_amount": 450000,
-    "emi_amount": 14000,
-    "start_date": "2024-01-20",
+    "contract_date": "2024-01-20",
     "customer": {
       "name": "Vikram Singh",
       "phone": "+91-9876543250",
-      "address": "654 Connaught Place, New Delhi"
+      "address": "654 Connaught Place, New Delhi",
+      "photo": null
+    },
+    "guarantor": {
+      "name": "Ravi Singh",
+      "phone": "+91-9876543251",
+      "address": "655 Connaught Place, New Delhi",
+      "relation": "Brother",
+      "photo": null
     },
     "vehicle": {
       "make": "Maruti Suzuki",
       "model": "Brezza",
       "year": 2023,
-      "registration_number": "DL-08-IJ-7890"
+      "registration_number": "DL-08-IJ-7890",
+      "vin": "MA3CVKFS000123456",
+      "color": "Blue"
+    },
+    "loan": {
+      "loan_amount": 450000,
+      "emi_amount": 14000,
+      "interest_rate": 10.0,
+      "tenure_months": 36,
+      "total_amount": 504000,
+      "amount_paid": 42000,
+      "outstanding_amount": 462000
     },
     "payment_schedule": [
       {
