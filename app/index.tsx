@@ -35,18 +35,15 @@ export default function Index() {
 
   const checkAuth = async () => {
     try {
-      const token = await storage.getItem('auth_token');
-      if (token) {
-        console.log('Token found, redirecting to contracts');
-        router.replace('/contracts');
-        return;
-      }
+      console.log('Using mock authentication mode');
+      // Simulate checking for existing auth
+      await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Auto-login with demo credentials if no token
-      console.log('No token found, attempting auto-login...');
-      await autoLogin();
+      // Auto-redirect to contracts with mock auth
+      console.log('Mock auth successful, redirecting to contracts');
+      router.replace('/contracts');
     } catch (error) {
-      console.error('Error checking auth:', error);
+      console.error('Error in mock auth:', error);
       setInitializing(false);
     }
   };
