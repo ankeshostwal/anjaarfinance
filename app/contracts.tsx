@@ -21,15 +21,16 @@ import { MOCK_CONTRACTS, MOCK_CREDENTIALS } from './mockData';
 const USE_MOCK_DATA = true;
 
 interface ContractListItem {
-  id: string;
+  _id: string;
   contract_number: string;
   customer_name: string;
-  vehicle_registration: string;
+  vehicle_number: string;
+  file_number: string;
   company_name: string;
   status: string;
-  outstanding_amount: number;
+  loan_amount: number;
   emi_amount: number;
-  contract_date: string;
+  start_date: string;
 }
 
 export default function ContractsScreen() {
