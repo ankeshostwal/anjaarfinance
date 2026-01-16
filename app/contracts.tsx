@@ -61,7 +61,7 @@ export default function ContractsScreen() {
     setCompanies(uniqueCompanies);
   }, [contracts]);
 
-  const fetchContracts = async (authToken?: string | null) => {
+  const fetchContracts = async () => {
     try {
       console.log('Loading mock contracts data');
       // Simulate API delay
@@ -70,10 +70,9 @@ export default function ContractsScreen() {
       // Transform mock data to match expected format
       const transformedContracts = MOCK_CONTRACTS.map(contract => ({
         ...contract,
-        id: contract._id,
-        vehicle_registration: contract.vehicle_number,
-        outstanding_amount: contract.loan_amount,
-        contract_date: contract.start_date
+        start_date: contract.contract_date,
+        loan_amount: contract.loan.loan_amount,
+        emi_amount: contract.loan.emi_amount,
       }));
       
       setContracts(transformedContracts);
