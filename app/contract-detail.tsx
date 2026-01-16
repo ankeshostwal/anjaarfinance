@@ -18,12 +18,14 @@ import { MOCK_CONTRACTS } from './mockData';
 // Use mock data for offline mode
 const USE_MOCK_DATA = true;
 
+// Updated interface to match mockData structure
 interface PaymentSchedule {
-  installment_number: number;
+  sno: number;
+  emi_amount: number;
   due_date: string;
-  amount: number;
-  status: string;
-  paid_date?: string;
+  payment_received: number;
+  date_received: string | null;
+  delay_days: number;
 }
 
 interface Contract {
