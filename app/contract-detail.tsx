@@ -12,11 +12,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import axios from 'axios';
-import { useAuth } from './context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
+import { MOCK_CONTRACTS } from './mockData';
 
-const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+// Use mock data for offline mode
+const USE_MOCK_DATA = true;
 
 interface PaymentSchedule {
   installment_number: number;
