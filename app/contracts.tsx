@@ -124,11 +124,11 @@ export default function ContractsScreen() {
 
     // Apply sorting
     if (sortBy === 'date') {
-      filtered.sort((a, b) => new Date(b.contract_date).getTime() - new Date(a.contract_date).getTime());
+      filtered.sort((a, b) => new Date(b.start_date).getTime() - new Date(a.start_date).getTime());
     } else if (sortBy === 'customer') {
       filtered.sort((a, b) => a.customer_name.localeCompare(b.customer_name));
     } else if (sortBy === 'amount') {
-      filtered.sort((a, b) => b.outstanding_amount - a.outstanding_amount);
+      filtered.sort((a, b) => b.loan_amount - a.loan_amount);
     } else if (sortBy === 'company') {
       filtered.sort((a, b) => a.company_name.localeCompare(b.company_name));
     }
