@@ -15,7 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { MOCK_CONTRACTS, MOCK_CREDENTIALS } from './mockData';
+import { MOCK_CONTRACTS } from './mockData';
 
 // Use mock data for offline mode
 const USE_MOCK_DATA = true;
@@ -44,23 +44,12 @@ export default function ContractsScreen() {
   const [companyFilter, setCompanyFilter] = useState('all');
   const [sortBy, setSortBy] = useState('date');
   const [showFilterModal, setShowFilterModal] = useState(false);
-  const [token, setToken] = useState<string | null>(null);
   const [companies, setCompanies] = useState<string[]>([]);
 
   useEffect(() => {
-    autoLogin();
+    // Load contracts on mount
+    fetchContracts();
   }, []);
-
-  const autoLogin = async () => {
-    try {
-      console.log('Using mock data for offline mode');
-      setToken('mock-token');
-      fetchContracts('mock-token');
-    } catch (error) {
-      console.error('Mock data loading error:', error);
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
     filterAndSortContracts();
