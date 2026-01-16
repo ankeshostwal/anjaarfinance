@@ -102,3 +102,7 @@ android-sdk/ -e
 *.env
 *.env.*
 .expo/
+-e 
+# Environment files
+*.env
+*.env.*
