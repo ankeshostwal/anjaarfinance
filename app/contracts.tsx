@@ -188,7 +188,7 @@ export default function ContractsScreen() {
   const renderContract = ({ item, index }: { item: ContractListItem; index: number }) => (
     <TouchableOpacity
       style={styles.tableRow}
-      onPress={() => router.push({ pathname: '/contract-detail', params: { contractId: item.id } })}
+      onPress={() => router.push({ pathname: '/contract-detail', params: { contractId: item._id } })}
     >
       <View style={styles.tableCell1}>
         <Text style={styles.cellText}>{index + 1}</Text>
@@ -197,7 +197,7 @@ export default function ContractsScreen() {
         <Text style={styles.cellText}>{item.customer_name}</Text>
       </View>
       <View style={styles.tableCell3}>
-        <Text style={styles.cellText}>{item.vehicle_registration}</Text>
+        <Text style={styles.cellText}>{item.vehicle_number}</Text>
       </View>
       <View style={styles.tableCell4}>
         <Text style={styles.cellText}>{item.contract_number}</Text>
