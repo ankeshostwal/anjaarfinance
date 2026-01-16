@@ -394,7 +394,7 @@ export default function ContractsScreen() {
         <FlatList
           data={filteredContracts}
           renderItem={renderContract}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item._id}
           contentContainerStyle={styles.listContent}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
