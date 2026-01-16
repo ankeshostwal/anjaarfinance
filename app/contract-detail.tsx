@@ -74,32 +74,32 @@ export default function ContractDetailScreen() {
   const { token, logout } = useAuth();
 
   useEffect(() => {
-    if (!token) {
-      router.replace('/');
-      return;
-    }
     if (contractId) {
       fetchContractDetail();
     }
-  }, [token, contractId]);
+  }, [contractId]);
 
   const fetchContractDetail = async () => {
     try {
-      const response = await axios.get(
-        `${BACKEND_URL}/api/contracts/${contractId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setContract(response.data);
-    } catch (error: any) {
-      console.error('Error fetching contract:', error);
-      if (error.response?.status === 401) {
-        Alert.alert('Session Expired', 'Please login again');
-        await logout();
-        router.replace('/');
+      console.log('Loading contract detail from mock data, ID:', contractId);
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      // Find contract in mock data
+      const foundContract = MOCK_CONTRACTS.find(c => c._id === contractId);
+      
+      if (foundContract) {
+        console.log('Contract found:', foundContract.contract_number);
+        setContract(foundContract as any);
       } else {
-        Alert.alert('Error', 'Failed to load contract details');
+        console.error('Contract not found in mock data');
+        Alert.alert('Error', 'Contract not found');
         router.back();
       }
+    } catch (error: any) {
+      console.error('Error loading contract:', error);
+      Alert.alert('Error', 'Failed to load contract details');
+      router.back();
     } finally {
       setLoading(false);
     }
