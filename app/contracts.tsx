@@ -151,11 +151,7 @@ export default function ContractsScreen() {
           text: 'Logout',
           style: 'destructive',
           onPress: async () => {
-            const storage = Platform.OS === 'web' ? localStorage : null;
-            if (storage) {
-              storage.removeItem('auth_token');
-              storage.removeItem('username');
-            }
+            console.log('Logging out from mock mode');
             router.replace('/');
           }
         }
