@@ -29,22 +29,26 @@ interface PaymentSchedule {
 }
 
 interface Contract {
-  id: string;
+  _id: string;
   contract_number: string;
   contract_date: string;
   status: string;
+  customer_name: string;
+  vehicle_number: string;
+  file_number: string;
+  company_name: string;
   customer: {
     name: string;
     phone: string;
     address: string;
-    photo: string;
+    photo: string | null;
   };
   guarantor: {
     name: string;
     phone: string;
     address: string;
     relation: string;
-    photo: string;
+    photo: string | null;
   };
   vehicle: {
     make: string;
