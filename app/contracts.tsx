@@ -74,22 +74,24 @@ export default function ContractsScreen() {
 
   const fetchContracts = async (authToken?: string | null) => {
     try {
-      const tkn = authToken || token;
-      const response = await axios.get(
-        `${BACKEND_URL}/api/contracts`,
-        {
-          headers: tkn ? { Authorization: `Bearer ${tkn}` } : {},
-          params: {
-            search: searchQuery || undefined,
-            status_filter: statusFilter !== 'all' ? statusFilter : undefined,
-            sort_by: sortBy,
-          }
-        }
-      );
-      setContracts(response.data);
-      setFilteredContracts(response.data);
+      console.log('Loading mock contracts data');
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Transform mock data to match expected format
+      const transformedContracts = MOCK_CONTRACTS.map(contract => ({
+        ...contract,
+        id: contract._id,
+        vehicle_registration: contract.vehicle_number,
+        outstanding_amount: contract.loan_amount,
+        contract_date: contract.start_date
+      }));
+      
+      setContracts(transformedContracts);
+      setFilteredContracts(transformedContracts);
+      console.log('Mock contracts loaded:', transformedContracts.length);
     } catch (error: any) {
-      console.error('Error fetching contracts:', error);
+      console.error('Error loading mock contracts:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
