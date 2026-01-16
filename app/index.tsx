@@ -48,58 +48,31 @@ export default function Index() {
     }
   };
 
-  const autoLogin = async () => {
-    try {
-      console.log('Auto-login starting...');
-      const response = await axios.post(`${BACKEND_URL}/api/auth/login`, {
-        username: 'admin',
-        password: 'admin123'
-      });
-
-      console.log('Auto-login successful!', response.data);
-      const { access_token, username: user } = response.data;
-      
-      await storage.setItem('auth_token', access_token);
-      await storage.setItem('username', user);
-      
-      console.log('Redirecting to contracts...');
-      router.replace('/contracts');
-    } catch (error) {
-      console.error('Auto-login failed:', error);
-      setInitializing(false);
-    }
-  };
-
   const handleLogin = async () => {
-    console.log('handleLogin called');
+    console.log('Mock login called');
     if (!username.trim() || !password.trim()) {
       Alert.alert('Error', 'Please enter both username and password');
       return;
     }
 
     setLoading(true);
-    console.log('Making login request to:', `${BACKEND_URL}/api/auth/login`);
+    console.log('Attempting mock login...');
+    
     try {
-      const response = await axios.post(`${BACKEND_URL}/api/auth/login`, {
-        username: username.trim(),
-        password: password
-      });
-
-      console.log('Login response:', response.data);
-      const { access_token, username: user } = response.data;
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Store auth data
-      await storage.setItem('auth_token', access_token);
-      await storage.setItem('username', user);
-      
-      console.log('Auth data stored, redirecting to /contracts');
-      router.replace('/contracts');
+      // Check mock credentials
+      if (username.trim() === MOCK_CREDENTIALS.username && password === MOCK_CREDENTIALS.password) {
+        console.log('Mock login successful!');
+        console.log('Redirecting to contracts...');
+        router.replace('/contracts');
+      } else {
+        Alert.alert('Login Failed', 'Invalid username or password');
+      }
     } catch (error: any) {
-      console.error('Login error:', error);
-      Alert.alert(
-        'Login Failed',
-        error.response?.data?.detail || 'Invalid username or password'
-      );
+      console.error('Mock login error:', error);
+      Alert.alert('Login Failed', 'An error occurred during login');
     } finally {
       setLoading(false);
     }
