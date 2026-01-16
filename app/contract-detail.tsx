@@ -219,12 +219,18 @@ export default function ContractDetailScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Customer Details</Text>
           <View style={styles.card}>
-            <TouchableOpacity onPress={() => setSelectedImage(contract.customer.photo)}>
-              <Image
-                source={{ uri: contract.customer.photo }}
-                style={styles.photo}
-              />
-            </TouchableOpacity>
+            {contract.customer.photo ? (
+              <TouchableOpacity onPress={() => setSelectedImage(contract.customer.photo)}>
+                <Image
+                  source={{ uri: contract.customer.photo }}
+                  style={styles.photo}
+                />
+              </TouchableOpacity>
+            ) : (
+              <View style={[styles.photo, styles.photoPlaceholder]}>
+                <Ionicons name="person" size={48} color="#999" />
+              </View>
+            )}
             <View style={styles.detailRow}>
               <Ionicons name="person" size={20} color="#666" />
               <Text style={styles.detailText}>{contract.customer.name}</Text>
@@ -244,12 +250,18 @@ export default function ContractDetailScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Guarantor Details</Text>
           <View style={styles.card}>
-            <TouchableOpacity onPress={() => setSelectedImage(contract.guarantor.photo)}>
-              <Image
-                source={{ uri: contract.guarantor.photo }}
-                style={styles.photo}
-              />
-            </TouchableOpacity>
+            {contract.guarantor.photo ? (
+              <TouchableOpacity onPress={() => setSelectedImage(contract.guarantor.photo)}>
+                <Image
+                  source={{ uri: contract.guarantor.photo }}
+                  style={styles.photo}
+                />
+              </TouchableOpacity>
+            ) : (
+              <View style={[styles.photo, styles.photoPlaceholder]}>
+                <Ionicons name="person" size={48} color="#999" />
+              </View>
+            )}
             <View style={styles.detailRow}>
               <Ionicons name="person" size={20} color="#666" />
               <Text style={styles.detailText}>{contract.guarantor.name}</Text>
