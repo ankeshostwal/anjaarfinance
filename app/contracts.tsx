@@ -117,7 +117,7 @@ export default function ContractsScreen() {
       filtered = filtered.filter(c => 
         c.customer_name.toLowerCase().includes(query) ||
         c.contract_number.toLowerCase().includes(query) ||
-        c.vehicle_registration.toLowerCase().includes(query) ||
+        c.vehicle_number.toLowerCase().includes(query) ||
         c.company_name.toLowerCase().includes(query)
       );
     }
