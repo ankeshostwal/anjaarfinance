@@ -153,10 +153,17 @@ export default function Index() {
             </Pressable>
 
             <View style={styles.demoCredentials}>
-              <Text style={styles.demoTitle}>Demo Credentials:</Text>
-              <Text style={styles.demoText}>Username: admin</Text>
-              <Text style={styles.demoText}>Password: admin123</Text>
-              <Pressable onPress={handleLogin} style={{marginTop: 8, padding: 8, backgroundColor: '#4CAF50', borderRadius: 8}}>
+              <Text style={styles.demoTitle}>Demo Credentials (Mock Mode):</Text>
+              <Text style={styles.demoText}>Username: {MOCK_CREDENTIALS.username}</Text>
+              <Text style={styles.demoText}>Password: {MOCK_CREDENTIALS.password}</Text>
+              <Pressable 
+                onPress={() => {
+                  setUsername(MOCK_CREDENTIALS.username);
+                  setPassword(MOCK_CREDENTIALS.password);
+                  setTimeout(handleLogin, 100);
+                }} 
+                style={{marginTop: 8, padding: 8, backgroundColor: '#4CAF50', borderRadius: 8}}
+              >
                 <Text style={{color: '#fff', textAlign: 'center', fontWeight: '600'}}>Quick Login (Click Here)</Text>
               </Pressable>
             </View>
