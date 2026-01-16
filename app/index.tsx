@@ -14,29 +14,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import axios from 'axios';
-import * as SecureStore from 'expo-secure-store';
 import { Ionicons } from '@expo/vector-icons';
+import { MOCK_CREDENTIALS } from './mockData';
 
-const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
-
-// Cross-platform storage helper
-const storage = {
-  async getItem(key: string): Promise<string | null> {
-    if (Platform.OS === 'web') {
-      return localStorage.getItem(key);
-    }
-    return await SecureStore.getItemAsync(key);
-  },
-  
-  async setItem(key: string, value: string): Promise<void> {
-    if (Platform.OS === 'web') {
-      localStorage.setItem(key, value);
-    } else {
-      await SecureStore.setItemAsync(key, value);
-    }
-  }
-};
+// Use mock authentication for offline mode
+const USE_MOCK_AUTH = true;
 
 export default function Index() {
   const router = useRouter();
