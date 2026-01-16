@@ -325,39 +325,33 @@ export default function ContractDetailScreen() {
 
             {/* Table Rows */}
             {contract.payment_schedule.map((payment, index) => {
-              const delayDays = payment.paid_date && payment.due_date 
-                ? Math.max(0, Math.floor((new Date(payment.paid_date).getTime() - new Date(payment.due_date).getTime()) / (1000 * 60 * 60 * 24)))
-                : (payment.status === 'overdue' 
-                    ? Math.floor((new Date().getTime() - new Date(payment.due_date).getTime()) / (1000 * 60 * 60 * 24))
-                    : 0);
-              
               return (
                 <View key={index} style={styles.paymentTableRow}>
                   <View style={styles.paymentCell1}>
-                    <Text style={styles.paymentCellText}>{payment.installment_number}</Text>
+                    <Text style={styles.paymentCellText}>{payment.sno}</Text>
                   </View>
                   <View style={styles.paymentCell2}>
-                    <Text style={styles.paymentCellText}>₹{payment.amount.toLocaleString()}</Text>
+                    <Text style={styles.paymentCellText}>₹{payment.emi_amount.toLocaleString()}</Text>
                   </View>
                   <View style={styles.paymentCell3}>
                     <Text style={styles.paymentCellText}>{payment.due_date}</Text>
                   </View>
                   <View style={styles.paymentCell4}>
                     <Text style={styles.paymentCellText}>
-                      {payment.status === 'paid' ? `₹${payment.amount.toLocaleString()}` : '-'}
+                      {payment.payment_received > 0 ? `₹${payment.payment_received.toLocaleString()}` : '-'}
                     </Text>
                   </View>
                   <View style={styles.paymentCell5}>
                     <Text style={styles.paymentCellText}>
-                      {payment.paid_date || '-'}
+                      {payment.date_received || '-'}
                     </Text>
                   </View>
                   <View style={styles.paymentCell6}>
                     <Text style={[
                       styles.paymentCellText,
-                      delayDays > 0 && styles.delayText
+                      payment.delay_days > 0 && styles.delayText
                     ]}>
-                      {delayDays > 0 ? delayDays : '-'}
+                      {payment.delay_days > 0 ? payment.delay_days : '-'}
                     </Text>
                   </View>
                 </View>
@@ -371,7 +365,7 @@ export default function ContractDetailScreen() {
               </View>
               <View style={styles.paymentCell2}>
                 <Text style={styles.paymentTotalText}>
-                  ₹{contract.payment_schedule.reduce((sum, p) => sum + p.amount, 0).toLocaleString()}
+                  ₹{contract.payment_schedule.reduce((sum, p) => sum + p.emi_amount, 0).toLocaleString()}
                 </Text>
               </View>
               <View style={styles.paymentCell3}>
@@ -380,8 +374,7 @@ export default function ContractDetailScreen() {
               <View style={styles.paymentCell4}>
                 <Text style={styles.paymentTotalText}>
                   ₹{contract.payment_schedule
-                    .filter(p => p.status === 'paid')
-                    .reduce((sum, p) => sum + p.amount, 0)
+                    .reduce((sum, p) => sum + p.payment_received, 0)
                     .toLocaleString()}
                 </Text>
               </View>
@@ -390,12 +383,7 @@ export default function ContractDetailScreen() {
               </View>
               <View style={styles.paymentCell6}>
                 <Text style={styles.paymentTotalText}>
-                  {contract.payment_schedule.reduce((sum, p) => {
-                    if (p.paid_date && p.due_date) {
-                      return sum + Math.max(0, Math.floor((new Date(p.paid_date).getTime() - new Date(p.due_date).getTime()) / (1000 * 60 * 60 * 24)));
-                    }
-                    return sum;
-                  }, 0)}
+                  {contract.payment_schedule.reduce((sum, p) => sum + p.delay_days, 0)}
                 </Text>
               </View>
             </View>
