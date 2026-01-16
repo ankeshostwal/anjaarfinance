@@ -77,7 +77,6 @@ export default function ContractDetailScreen() {
   const [contract, setContract] = useState<Contract | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const { token, logout } = useAuth();
 
   useEffect(() => {
     if (contractId) {
