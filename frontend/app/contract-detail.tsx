@@ -12,37 +12,43 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import axios from 'axios';
-import { useAuth } from './context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
+import { MOCK_CONTRACTS } from './mockData';
 
-const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+// Use mock data for offline mode
+const USE_MOCK_DATA = true;
 
+// Updated interface to match mockData structure
 interface PaymentSchedule {
-  installment_number: number;
+  sno: number;
+  emi_amount: number;
   due_date: string;
-  amount: number;
-  status: string;
-  paid_date?: string;
+  payment_received: number;
+  date_received: string | null;
+  delay_days: number;
 }
 
 interface Contract {
-  id: string;
+  _id: string;
   contract_number: string;
   contract_date: string;
   status: string;
+  customer_name: string;
+  vehicle_number: string;
+  file_number: string;
+  company_name: string;
   customer: {
     name: string;
     phone: string;
     address: string;
-    photo: string;
+    photo: string | null;
   };
   guarantor: {
     name: string;
     phone: string;
     address: string;
     relation: string;
-    photo: string;
+    photo: string | null;
   };
   vehicle: {
     make: string;
@@ -71,35 +77,34 @@ export default function ContractDetailScreen() {
   const [contract, setContract] = useState<Contract | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const { token, logout } = useAuth();
 
   useEffect(() => {
-    if (!token) {
-      router.replace('/');
-      return;
-    }
     if (contractId) {
       fetchContractDetail();
     }
-  }, [token, contractId]);
+  }, [contractId]);
 
   const fetchContractDetail = async () => {
     try {
-      const response = await axios.get(
-        `${BACKEND_URL}/api/contracts/${contractId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setContract(response.data);
-    } catch (error: any) {
-      console.error('Error fetching contract:', error);
-      if (error.response?.status === 401) {
-        Alert.alert('Session Expired', 'Please login again');
-        await logout();
-        router.replace('/');
+      console.log('Loading contract detail from mock data, ID:', contractId);
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      // Find contract in mock data
+      const foundContract = MOCK_CONTRACTS.find(c => c._id === contractId);
+      
+      if (foundContract) {
+        console.log('Contract found:', foundContract.contract_number);
+        setContract(foundContract as any);
       } else {
-        Alert.alert('Error', 'Failed to load contract details');
+        console.error('Contract not found in mock data');
+        Alert.alert('Error', 'Contract not found');
         router.back();
       }
+    } catch (error: any) {
+      console.error('Error loading contract:', error);
+      Alert.alert('Error', 'Failed to load contract details');
+      router.back();
     } finally {
       setLoading(false);
     }
@@ -214,12 +219,18 @@ export default function ContractDetailScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Customer Details</Text>
           <View style={styles.card}>
-            <TouchableOpacity onPress={() => setSelectedImage(contract.customer.photo)}>
-              <Image
-                source={{ uri: contract.customer.photo }}
-                style={styles.photo}
-              />
-            </TouchableOpacity>
+            {contract.customer.photo ? (
+              <TouchableOpacity onPress={() => setSelectedImage(contract.customer.photo)}>
+                <Image
+                  source={{ uri: contract.customer.photo }}
+                  style={styles.photo}
+                />
+              </TouchableOpacity>
+            ) : (
+              <View style={[styles.photo, styles.photoPlaceholder]}>
+                <Ionicons name="person" size={48} color="#999" />
+              </View>
+            )}
             <View style={styles.detailRow}>
               <Ionicons name="person" size={20} color="#666" />
               <Text style={styles.detailText}>{contract.customer.name}</Text>
@@ -239,12 +250,18 @@ export default function ContractDetailScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Guarantor Details</Text>
           <View style={styles.card}>
-            <TouchableOpacity onPress={() => setSelectedImage(contract.guarantor.photo)}>
-              <Image
-                source={{ uri: contract.guarantor.photo }}
-                style={styles.photo}
-              />
-            </TouchableOpacity>
+            {contract.guarantor.photo ? (
+              <TouchableOpacity onPress={() => setSelectedImage(contract.guarantor.photo)}>
+                <Image
+                  source={{ uri: contract.guarantor.photo }}
+                  style={styles.photo}
+                />
+              </TouchableOpacity>
+            ) : (
+              <View style={[styles.photo, styles.photoPlaceholder]}>
+                <Ionicons name="person" size={48} color="#999" />
+              </View>
+            )}
             <View style={styles.detailRow}>
               <Ionicons name="person" size={20} color="#666" />
               <Text style={styles.detailText}>{contract.guarantor.name}</Text>
@@ -320,39 +337,33 @@ export default function ContractDetailScreen() {
 
             {/* Table Rows */}
             {contract.payment_schedule.map((payment, index) => {
-              const delayDays = payment.paid_date && payment.due_date 
-                ? Math.max(0, Math.floor((new Date(payment.paid_date).getTime() - new Date(payment.due_date).getTime()) / (1000 * 60 * 60 * 24)))
-                : (payment.status === 'overdue' 
-                    ? Math.floor((new Date().getTime() - new Date(payment.due_date).getTime()) / (1000 * 60 * 60 * 24))
-                    : 0);
-              
               return (
                 <View key={index} style={styles.paymentTableRow}>
                   <View style={styles.paymentCell1}>
-                    <Text style={styles.paymentCellText}>{payment.installment_number}</Text>
+                    <Text style={styles.paymentCellText}>{payment.sno}</Text>
                   </View>
                   <View style={styles.paymentCell2}>
-                    <Text style={styles.paymentCellText}>₹{payment.amount.toLocaleString()}</Text>
+                    <Text style={styles.paymentCellText}>₹{payment.emi_amount.toLocaleString()}</Text>
                   </View>
                   <View style={styles.paymentCell3}>
                     <Text style={styles.paymentCellText}>{payment.due_date}</Text>
                   </View>
                   <View style={styles.paymentCell4}>
                     <Text style={styles.paymentCellText}>
-                      {payment.status === 'paid' ? `₹${payment.amount.toLocaleString()}` : '-'}
+                      {payment.payment_received > 0 ? `₹${payment.payment_received.toLocaleString()}` : '-'}
                     </Text>
                   </View>
                   <View style={styles.paymentCell5}>
                     <Text style={styles.paymentCellText}>
-                      {payment.paid_date || '-'}
+                      {payment.date_received || '-'}
                     </Text>
                   </View>
                   <View style={styles.paymentCell6}>
                     <Text style={[
                       styles.paymentCellText,
-                      delayDays > 0 && styles.delayText
+                      payment.delay_days > 0 && styles.delayText
                     ]}>
-                      {delayDays > 0 ? delayDays : '-'}
+                      {payment.delay_days > 0 ? payment.delay_days : '-'}
                     </Text>
                   </View>
                 </View>
@@ -366,7 +377,7 @@ export default function ContractDetailScreen() {
               </View>
               <View style={styles.paymentCell2}>
                 <Text style={styles.paymentTotalText}>
-                  ₹{contract.payment_schedule.reduce((sum, p) => sum + p.amount, 0).toLocaleString()}
+                  ₹{contract.payment_schedule.reduce((sum, p) => sum + p.emi_amount, 0).toLocaleString()}
                 </Text>
               </View>
               <View style={styles.paymentCell3}>
@@ -375,8 +386,7 @@ export default function ContractDetailScreen() {
               <View style={styles.paymentCell4}>
                 <Text style={styles.paymentTotalText}>
                   ₹{contract.payment_schedule
-                    .filter(p => p.status === 'paid')
-                    .reduce((sum, p) => sum + p.amount, 0)
+                    .reduce((sum, p) => sum + p.payment_received, 0)
                     .toLocaleString()}
                 </Text>
               </View>
@@ -385,12 +395,7 @@ export default function ContractDetailScreen() {
               </View>
               <View style={styles.paymentCell6}>
                 <Text style={styles.paymentTotalText}>
-                  {contract.payment_schedule.reduce((sum, p) => {
-                    if (p.paid_date && p.due_date) {
-                      return sum + Math.max(0, Math.floor((new Date(p.paid_date).getTime() - new Date(p.due_date).getTime()) / (1000 * 60 * 60 * 24)));
-                    }
-                    return sum;
-                  }, 0)}
+                  {contract.payment_schedule.reduce((sum, p) => sum + p.delay_days, 0)}
                 </Text>
               </View>
             </View>
@@ -483,6 +488,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 16,
     alignSelf: 'center',
+  },
+  photoPlaceholder: {
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   detailRow: {
     flexDirection: 'row',

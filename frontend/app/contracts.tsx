@@ -14,22 +14,23 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import axios from 'axios';
-import { useAuth } from './context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
+import { MOCK_CONTRACTS } from './mockData';
 
-const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+// Use mock data for offline mode
+const USE_MOCK_DATA = true;
 
 interface ContractListItem {
-  id: string;
+  _id: string;
   contract_number: string;
   customer_name: string;
-  vehicle_registration: string;
+  vehicle_number: string;
+  file_number: string;
   company_name: string;
   status: string;
-  outstanding_amount: number;
+  loan_amount: number;
   emi_amount: number;
-  contract_date: string;
+  start_date: string;
 }
 
 export default function ContractsScreen() {
@@ -43,44 +44,12 @@ export default function ContractsScreen() {
   const [companyFilter, setCompanyFilter] = useState('all');
   const [sortBy, setSortBy] = useState('date');
   const [showFilterModal, setShowFilterModal] = useState(false);
-  const [token, setToken] = useState<string | null>(null);
   const [companies, setCompanies] = useState<string[]>([]);
 
   useEffect(() => {
-    autoLogin();
+    // Load contracts on mount
+    fetchContracts();
   }, []);
-
-  const autoLogin = async () => {
-    try {
-      console.log('autoLogin started');
-      // Try to get existing token
-      const storage = Platform.OS === 'web' ? localStorage : null;
-      let existingToken = storage ? storage.getItem('auth_token') : null;
-      
-      console.log('Existing token:', existingToken ? 'found' : 'not found');
-      
-      if (!existingToken) {
-        // Auto-login with demo credentials
-        console.log('Attempting auto-login...');
-        const response = await axios.post(`${BACKEND_URL}/api/auth/login`, {
-          username: 'admin',
-          password: 'admin123'
-        });
-        existingToken = response.data.access_token;
-        console.log('Auto-login successful, token:', existingToken.substring(0, 20) + '...');
-        if (storage) {
-          storage.setItem('auth_token', existingToken);
-          storage.setItem('username', 'admin');
-        }
-      }
-      
-      setToken(existingToken);
-      fetchContracts(existingToken);
-    } catch (error) {
-      console.error('Auto-login error:', error);
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
     filterAndSortContracts();
@@ -92,31 +61,25 @@ export default function ContractsScreen() {
     setCompanies(uniqueCompanies);
   }, [contracts]);
 
-  const fetchContracts = async (authToken?: string | null) => {
+  const fetchContracts = async () => {
     try {
-      const tkn = authToken || token;
-      console.log('Fetching contracts from:', `${BACKEND_URL}/api/contracts`);
-      console.log('Token available:', !!tkn);
+      console.log('Loading mock contracts data');
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
       
-      const response = await axios.get(
-        `${BACKEND_URL}/api/contracts`,
-        {
-          headers: tkn ? { Authorization: `Bearer ${tkn}` } : {},
-          params: {
-            search: searchQuery || undefined,
-            status_filter: statusFilter !== 'all' ? statusFilter : undefined,
-            sort_by: sortBy,
-          }
-        }
-      );
+      // Transform mock data to match expected format
+      const transformedContracts = MOCK_CONTRACTS.map(contract => ({
+        ...contract,
+        start_date: contract.contract_date,
+        loan_amount: contract.loan.loan_amount,
+        emi_amount: contract.loan.emi_amount,
+      }));
       
-      console.log('Contracts received:', response.data.length);
-      setContracts(response.data);
-      setFilteredContracts(response.data);
+      setContracts(transformedContracts);
+      setFilteredContracts(transformedContracts);
+      console.log('Mock contracts loaded:', transformedContracts.length);
     } catch (error: any) {
-      console.error('Error fetching contracts:', error.message);
-      console.error('Error details:', error.response?.data);
-      Alert.alert('Error', `Failed to load contracts: ${error.message}`);
+      console.error('Error loading mock contracts:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -142,18 +105,18 @@ export default function ContractsScreen() {
       filtered = filtered.filter(c => 
         c.customer_name.toLowerCase().includes(query) ||
         c.contract_number.toLowerCase().includes(query) ||
-        c.vehicle_registration.toLowerCase().includes(query) ||
+        c.vehicle_number.toLowerCase().includes(query) ||
         c.company_name.toLowerCase().includes(query)
       );
     }
 
     // Apply sorting
     if (sortBy === 'date') {
-      filtered.sort((a, b) => new Date(b.contract_date).getTime() - new Date(a.contract_date).getTime());
+      filtered.sort((a, b) => new Date(b.start_date).getTime() - new Date(a.start_date).getTime());
     } else if (sortBy === 'customer') {
       filtered.sort((a, b) => a.customer_name.localeCompare(b.customer_name));
     } else if (sortBy === 'amount') {
-      filtered.sort((a, b) => b.outstanding_amount - a.outstanding_amount);
+      filtered.sort((a, b) => b.loan_amount - a.loan_amount);
     } else if (sortBy === 'company') {
       filtered.sort((a, b) => a.company_name.localeCompare(b.company_name));
     }
@@ -176,11 +139,7 @@ export default function ContractsScreen() {
           text: 'Logout',
           style: 'destructive',
           onPress: async () => {
-            const storage = Platform.OS === 'web' ? localStorage : null;
-            if (storage) {
-              storage.removeItem('auth_token');
-              storage.removeItem('username');
-            }
+            console.log('Logging out from mock mode');
             router.replace('/');
           }
         }
@@ -213,7 +172,7 @@ export default function ContractsScreen() {
   const renderContract = ({ item, index }: { item: ContractListItem; index: number }) => (
     <TouchableOpacity
       style={styles.tableRow}
-      onPress={() => router.push({ pathname: '/contract-detail', params: { contractId: item.id } })}
+      onPress={() => router.push({ pathname: '/contract-detail', params: { contractId: item._id } })}
     >
       <View style={styles.tableCell1}>
         <Text style={styles.cellText}>{index + 1}</Text>
@@ -222,7 +181,7 @@ export default function ContractsScreen() {
         <Text style={styles.cellText}>{item.customer_name}</Text>
       </View>
       <View style={styles.tableCell3}>
-        <Text style={styles.cellText}>{item.vehicle_registration}</Text>
+        <Text style={styles.cellText}>{item.vehicle_number}</Text>
       </View>
       <View style={styles.tableCell4}>
         <Text style={styles.cellText}>{item.contract_number}</Text>
@@ -419,7 +378,7 @@ export default function ContractsScreen() {
         <FlatList
           data={filteredContracts}
           renderItem={renderContract}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item._id}
           contentContainerStyle={styles.listContent}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
