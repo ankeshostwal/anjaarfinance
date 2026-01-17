@@ -6,17 +6,15 @@ on:
     branches:
       - main
     paths:
-      - 'frontend/**'
+      - 'app/**'
+      - 'eas.json'
+      - 'app.json'
       - '.github/workflows/build-apk.yml'
 
 jobs:
   build:
     name: Build Android APK
     runs-on: ubuntu-latest
-    
-    defaults:
-      run:
-        working-directory: frontend
 
     steps:
       - name: 🔍 Checkout repository
@@ -27,7 +25,7 @@ jobs:
         with:
           node-version: '22.x'
           cache: 'yarn'
-          cache-dependency-path: 'frontend/yarn.lock'
+          cache-dependency-path: 'yarn.lock'
 
       - name: 🔧 Setup Expo and EAS
         uses: expo/expo-github-action@v8
@@ -58,14 +56,5 @@ jobs:
           echo ""
           echo "📱 Check build status at:"
           echo "   https://expo.dev/accounts/ankeshostwal/projects/anjaarfinance/builds"
-          echo ""
-          echo "⏰ Build will take approximately 15-20 minutes"
-          echo ""
-          echo "📥 Steps to get your APK:"
-          echo "   1. Go to the link above"
-          echo "   2. Wait for build to finish"
-          echo "   3. Click 'Download' button"
-          echo "   4. Transfer APK to your Android phone"
-          echo "   5. Install and enjoy!"
           echo ""
           echo "======================================"
