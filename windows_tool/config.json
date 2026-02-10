@@ -1,86 +1,14 @@
 {
   "database": {
-    "server": "localhost",
-    "database": "YourDatabaseName",
+    "server": "ANKESH-SERVER\\SQLEXPRESS",
+    "database": "AnjaarFinance",
     "username": "",
     "password": "",
     "trusted_connection": true
   },
-  "tables": {
-    "contracts": {
-      "table_name": "YOUR_CONTRACTS_TABLE",
-      "columns": {
-        "id": "ContractID",
-        "contract_number": "ContractNo",
-        "contract_date": "ContractDate",
-        "status": "Status",
-        "file_number": "FileNo",
-        "company_name": "CompanyName"
-      }
-    },
-    "customers": {
-      "table_name": "YOUR_CUSTOMERS_TABLE",
-      "columns": {
-        "id": "CustomerID",
-        "contract_id": "ContractID",
-        "name": "CustomerName",
-        "phone": "Phone",
-        "address": "Address",
-        "photo": "PhotoPath"
-      }
-    },
-    "guarantors": {
-      "table_name": "YOUR_GUARANTORS_TABLE",
-      "columns": {
-        "id": "GuarantorID",
-        "contract_id": "ContractID",
-        "name": "GuarantorName",
-        "phone": "Phone",
-        "address": "Address",
-        "relation": "Relation",
-        "photo": "PhotoPath"
-      }
-    },
-    "vehicles": {
-      "table_name": "YOUR_VEHICLES_TABLE",
-      "columns": {
-        "id": "VehicleID",
-        "contract_id": "ContractID",
-        "make": "Make",
-        "model": "Model",
-        "year": "Year",
-        "registration_number": "RegNo",
-        "vin": "VIN",
-        "color": "Color"
-      }
-    },
-    "loans": {
-      "table_name": "YOUR_LOANS_TABLE",
-      "columns": {
-        "id": "LoanID",
-        "contract_id": "ContractID",
-        "loan_amount": "LoanAmount",
-        "interest_rate": "InterestRate",
-        "tenure_months": "Tenure",
-        "emi_amount": "EMIAmount",
-        "total_amount": "TotalAmount",
-        "amount_paid": "AmountPaid",
-        "outstanding_amount": "OutstandingAmount"
-      }
-    },
-    "payments": {
-      "table_name": "YOUR_PAYMENTS_TABLE",
-      "columns": {
-        "id": "PaymentID",
-        "contract_id": "ContractID",
-        "sno": "InstallmentNo",
-        "emi_amount": "EMIAmount",
-        "due_date": "DueDate",
-        "payment_received": "AmountReceived",
-        "date_received": "DateReceived",
-        "delay_days": "DelayDays"
-      }
-    }
+  "query": {
+    "main_query": "SELECT a.CoCode, a.FlCode, a.FnCode, a.FnName, a.FnRefNo, a.FnRegistration, a.FnGr1Code, a.FnArtCode, a.FnChassis, a.FnEngine, a.FnModel, a.FnColour, a.FnAgSeized, b.CoName, b.CoAlias, c.Title, c.Father, c.Address1, c.Address2, c.Address3, c.Address4, c.Address5, c.Mobile, d.Title AS GTitle, d.Father AS GFather, d.Address1 AS GAddress1, d.Address2 AS GAddress2, d.Address3 AS GAddress3, d.Address4 AS GAddress4, d.Address5 AS GAddress5, d.Mobile AS GMobile, e.AtName, f.FnAmt08 AS LoanAmount, f.FnFinRate, f.FnPayable, f.FnAgAmt AS TotalAmount, g.FnAgAmtPaid, g.FnAgAmtDue FROM FnAgreement a, GnCompanyM b, GnCusFolio c, GnCusFolio d, GnArticle e, FnAgAmount f, FnAgDues g WHERE a.FnSettled = 2 AND a.CoCode = b.CoCode AND a.FlCode = c.Code AND a.FnGr1Code = d.Code AND a.FnArtCode = e.AtCode AND a.FnCode = f.FnCode AND a.FnCode = g.FnCode ORDER BY a.FnCode",
+    "installments_query": "SELECT FnCode, SerialNo, DueDate, DueAmount, DueRcvdOn, DueAmountRcvd, DiffDays FROM FnAgInstalments WHERE FnCode = ?"
   },
   "output": {
     "file_path": "app_data.json"
