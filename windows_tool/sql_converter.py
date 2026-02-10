@@ -4,11 +4,14 @@ AnjaarFinance SQL Server Data Converter
 This tool reads data from your SQL Server database and converts it
 to a JSON file that can be imported into the AnjaarFinance mobile app.
 
-Instructions:
-1. Edit config.json with your database connection details
-2. Map your table names and column names in config.json
-3. Run this tool to generate app_data.json
-4. Import app_data.json into the mobile app
+Customized for AnjaarFinance database structure:
+- FnAgreement - Main contract details
+- GnCompanyM - Company information  
+- GnCusFolio - Customer & Guarantor details
+- GnArticle - Vehicle/Article details
+- FnAgAmount - Loan amounts
+- FnAgDues - Payment dues
+- FnAgInstalments - EMI/Payment schedule
 
 Author: AnjaarFinance Team
 """
@@ -42,19 +45,20 @@ def print_header():
     """Print application header"""
     print("\n" + "="*60)
     print("       ANJAARFINANCE - SQL Server Data Converter")
+    print("       Database: AnjaarFinance")
     print("="*60 + "\n")
 
 def print_success(msg):
-    print(f"{Colors.GREEN}✓ {msg}{Colors.END}")
+    print(f"[OK] {msg}")
 
 def print_error(msg):
-    print(f"{Colors.RED}✗ {msg}{Colors.END}")
+    print(f"[ERROR] {msg}")
 
 def print_info(msg):
-    print(f"{Colors.BLUE}ℹ {msg}{Colors.END}")
+    print(f"[INFO] {msg}")
 
 def print_warning(msg):
-    print(f"{Colors.YELLOW}⚠ {msg}{Colors.END}")
+    print(f"[WARN] {msg}")
 
 def load_config(config_path="config.json"):
     """Load configuration from JSON file"""
@@ -89,15 +93,36 @@ def connect_to_database(db_config):
         password = db_config.get('password', '')
         trusted_connection = db_config.get('trusted_connection', True)
         
-        if trusted_connection:
-            connection_string = f"DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={server};DATABASE={database};Trusted_Connection=yes;"
-        else:
-            connection_string = f"DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={server};DATABASE={database};UID={username};PWD={password};"
+        # Try different ODBC drivers
+        drivers = [
+            'ODBC Driver 17 for SQL Server',
+            'ODBC Driver 18 for SQL Server',
+            'SQL Server Native Client 11.0',
+            'SQL Server'
+        ]
         
-        print_info(f"Connecting to {server}/{database}...")
-        conn = pyodbc.connect(connection_string, timeout=10)
-        print_success("Connected to SQL Server successfully!")
-        return conn
+        conn = None
+        for driver in drivers:
+            try:
+                if trusted_connection:
+                    connection_string = f"DRIVER={{{driver}}};SERVER={server};DATABASE={database};Trusted_Connection=yes;"
+                else:
+                    connection_string = f"DRIVER={{{driver}}};SERVER={server};DATABASE={database};UID={username};PWD={password};"
+                
+                print_info(f"Trying driver: {driver}")
+                conn = pyodbc.connect(connection_string, timeout=10)
+                print_success(f"Connected using: {driver}")
+                break
+            except pyodbc.Error:
+                continue
+        
+        if conn:
+            print_success(f"Connected to {server}/{database}")
+            return conn
+        else:
+            print_error("Could not connect with any available driver")
+            print_info("Please install ODBC Driver 17 for SQL Server from Microsoft")
+            return None
     
     except pyodbc.Error as e:
         print_error(f"Database connection failed: {e}")
@@ -112,21 +137,58 @@ def json_serializer(obj):
         return float(obj)
     raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
 
-def fetch_data(conn, table_name, columns_map):
-    """Fetch data from a table with column mapping"""
+def format_date(value):
+    """Format date value to string"""
+    if value is None:
+        return None
+    if isinstance(value, (datetime, date)):
+        return value.strftime('%Y-%m-%d')
+    return str(value)
+
+def safe_float(value, default=0):
+    """Safely convert to float"""
+    if value is None:
+        return default
     try:
-        # Build SELECT query with column aliases
-        select_parts = []
-        for app_field, db_column in columns_map.items():
-            select_parts.append(f"[{db_column}] AS [{app_field}]")
-        
-        select_clause = ", ".join(select_parts)
-        query = f"SELECT {select_clause} FROM [{table_name}]"
-        
+        return float(value)
+    except (ValueError, TypeError):
+        return default
+
+def safe_int(value, default=0):
+    """Safely convert to int"""
+    if value is None:
+        return default
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        return default
+
+def safe_str(value, default=''):
+    """Safely convert to string"""
+    if value is None:
+        return default
+    return str(value).strip()
+
+def combine_address(*parts):
+    """Combine address parts into single string"""
+    address_parts = [safe_str(p) for p in parts if p and safe_str(p)]
+    return ', '.join(address_parts)
+
+def fetch_contracts(conn, config):
+    """Fetch all contracts using the main query"""
+    query_config = config.get('query', {})
+    main_query = query_config.get('main_query', '')
+    
+    if not main_query:
+        print_error("No main_query defined in config.json")
+        return []
+    
+    try:
+        print_info("Fetching contracts from database...")
         cursor = conn.cursor()
-        cursor.execute(query)
+        cursor.execute(main_query)
         
-        # Get column names from cursor description
+        # Get column names
         columns = [column[0] for column in cursor.description]
         
         # Fetch all rows as dictionaries
@@ -137,140 +199,156 @@ def fetch_data(conn, table_name, columns_map):
                 row_dict[columns[i]] = value
             rows.append(row_dict)
         
+        print_success(f"Found {len(rows)} contracts")
         return rows
     
     except pyodbc.Error as e:
-        print_error(f"Error fetching from {table_name}: {e}")
+        print_error(f"Error fetching contracts: {e}")
+        return []
+
+def fetch_installments(conn, fn_code):
+    """Fetch installments for a specific contract"""
+    query = """
+        SELECT FnCode, SerialNo, DueDate, DueAmount, DueRcvdOn, DueAmountRcvd, DiffDays 
+        FROM FnAgInstalments 
+        WHERE FnCode = ? 
+        ORDER BY SerialNo
+    """
+    
+    try:
+        cursor = conn.cursor()
+        cursor.execute(query, (fn_code,))
+        
+        installments = []
+        for row in cursor.fetchall():
+            installments.append({
+                'sno': safe_int(row[1]),
+                'emi_amount': safe_float(row[3]),
+                'due_date': format_date(row[2]),
+                'payment_received': safe_float(row[5]),
+                'date_received': format_date(row[4]),
+                'delay_days': safe_int(row[6])
+            })
+        
+        return installments
+    
+    except pyodbc.Error as e:
+        print_warning(f"Error fetching installments for FnCode {fn_code}: {e}")
         return []
 
 def build_contract_data(conn, config):
     """Build the complete contract data structure"""
-    tables = config.get('tables', {})
     contracts_data = []
     
-    # Fetch contracts
-    print_info("Fetching contracts...")
-    contracts_config = tables.get('contracts', {})
-    contracts = fetch_data(conn, 
-                          contracts_config.get('table_name', ''),
-                          contracts_config.get('columns', {}))
-    print_success(f"Found {len(contracts)} contracts")
+    # Fetch all contracts
+    raw_contracts = fetch_contracts(conn, config)
     
-    # Fetch related data
-    print_info("Fetching customers...")
-    customers_config = tables.get('customers', {})
-    customers = fetch_data(conn,
-                          customers_config.get('table_name', ''),
-                          customers_config.get('columns', {}))
-    customers_by_contract = {c.get('contract_id'): c for c in customers}
-    print_success(f"Found {len(customers)} customers")
+    if not raw_contracts:
+        return []
     
-    print_info("Fetching guarantors...")
-    guarantors_config = tables.get('guarantors', {})
-    guarantors = fetch_data(conn,
-                           guarantors_config.get('table_name', ''),
-                           guarantors_config.get('columns', {}))
-    guarantors_by_contract = {g.get('contract_id'): g for g in guarantors}
-    print_success(f"Found {len(guarantors)} guarantors")
+    print_info("Processing contracts and fetching installments...")
     
-    print_info("Fetching vehicles...")
-    vehicles_config = tables.get('vehicles', {})
-    vehicles = fetch_data(conn,
-                         vehicles_config.get('table_name', ''),
-                         vehicles_config.get('columns', {}))
-    vehicles_by_contract = {v.get('contract_id'): v for v in vehicles}
-    print_success(f"Found {len(vehicles)} vehicles")
-    
-    print_info("Fetching loans...")
-    loans_config = tables.get('loans', {})
-    loans = fetch_data(conn,
-                      loans_config.get('table_name', ''),
-                      loans_config.get('columns', {}))
-    loans_by_contract = {l.get('contract_id'): l for l in loans}
-    print_success(f"Found {len(loans)} loans")
-    
-    print_info("Fetching payments...")
-    payments_config = tables.get('payments', {})
-    payments = fetch_data(conn,
-                         payments_config.get('table_name', ''),
-                         payments_config.get('columns', {}))
-    # Group payments by contract
-    payments_by_contract = {}
-    for p in payments:
-        contract_id = p.get('contract_id')
-        if contract_id not in payments_by_contract:
-            payments_by_contract[contract_id] = []
-        payments_by_contract[contract_id].append(p)
-    print_success(f"Found {len(payments)} payment records")
-    
-    # Build complete contract objects
-    print_info("Building contract data...")
-    for idx, contract in enumerate(contracts):
-        contract_id = contract.get('id')
+    for idx, row in enumerate(raw_contracts):
+        fn_code = row.get('FnCode')
         
-        customer = customers_by_contract.get(contract_id, {})
-        guarantor = guarantors_by_contract.get(contract_id, {})
-        vehicle = vehicles_by_contract.get(contract_id, {})
-        loan = loans_by_contract.get(contract_id, {})
-        contract_payments = payments_by_contract.get(contract_id, [])
+        # Determine status based on FnAgSeized
+        seized_value = row.get('FnAgSeized', 0)
+        status = 'Seized' if seized_value == 1 else 'Live'
         
-        # Sort payments by sno
-        contract_payments.sort(key=lambda x: x.get('sno', 0))
+        # Build customer address
+        customer_address = combine_address(
+            row.get('Address1'),
+            row.get('Address2'),
+            row.get('Address3'),
+            row.get('Address4'),
+            row.get('Address5')
+        )
         
-        # Build the contract object matching app's expected format
+        # Build guarantor address
+        guarantor_address = combine_address(
+            row.get('GAddress1'),
+            row.get('GAddress2'),
+            row.get('GAddress3'),
+            row.get('GAddress4'),
+            row.get('GAddress5')
+        )
+        
+        # Customer name with title
+        customer_title = safe_str(row.get('Title'))
+        customer_father = safe_str(row.get('Father'))
+        customer_name = f"{customer_title} {customer_father}".strip() if customer_title else customer_father
+        
+        # Guarantor name with title
+        guarantor_title = safe_str(row.get('GTitle'))
+        guarantor_father = safe_str(row.get('GFather'))
+        guarantor_name = f"{guarantor_title} {guarantor_father}".strip() if guarantor_title else guarantor_father
+        
+        # Fetch installments for this contract
+        installments = fetch_installments(conn, fn_code)
+        
+        # Calculate loan details
+        loan_amount = safe_float(row.get('LoanAmount'))
+        total_amount = safe_float(row.get('TotalAmount'))
+        amount_paid = safe_float(row.get('FnAgAmtPaid'))
+        outstanding = safe_float(row.get('FnAgAmtDue'))
+        interest_rate = safe_float(row.get('FnFinRate'))
+        
+        # Calculate EMI amount from installments or loan details
+        emi_amount = 0
+        if installments:
+            emi_amount = installments[0].get('emi_amount', 0)
+        
+        # Calculate tenure from installments
+        tenure_months = len(installments) if installments else 0
+        
+        # Build the contract object
         contract_obj = {
-            "_id": str(contract_id),
-            "contract_number": str(contract.get('contract_number', '')),
-            "contract_date": contract.get('contract_date', ''),
-            "status": contract.get('status', 'Live'),
-            "customer_name": customer.get('name', ''),
-            "vehicle_number": vehicle.get('registration_number', ''),
-            "file_number": str(contract.get('file_number', '')),
-            "company_name": contract.get('company_name', ''),
+            "_id": str(fn_code),
+            "contract_number": safe_str(row.get('FnRefNo')) or safe_str(fn_code),
+            "contract_date": format_date(datetime.now()),  # You might have a date field
+            "status": status,
+            "customer_name": customer_name,
+            "vehicle_number": safe_str(row.get('FnRegistration')),
+            "file_number": safe_str(row.get('FnRefNo')),
+            "company_name": safe_str(row.get('CoName')) or safe_str(row.get('CoAlias')),
             "customer": {
-                "name": customer.get('name', ''),
-                "phone": customer.get('phone', ''),
-                "address": customer.get('address', ''),
-                "photo": customer.get('photo') or None
+                "name": customer_name,
+                "phone": safe_str(row.get('Mobile')),
+                "address": customer_address,
+                "photo": None
             },
             "guarantor": {
-                "name": guarantor.get('name', ''),
-                "phone": guarantor.get('phone', ''),
-                "address": guarantor.get('address', ''),
-                "relation": guarantor.get('relation', ''),
-                "photo": guarantor.get('photo') or None
+                "name": guarantor_name,
+                "phone": safe_str(row.get('GMobile')),
+                "address": guarantor_address,
+                "relation": "Guarantor",
+                "photo": None
             },
             "vehicle": {
-                "make": vehicle.get('make', ''),
-                "model": vehicle.get('model', ''),
-                "year": int(vehicle.get('year', 0)) if vehicle.get('year') else 0,
-                "registration_number": vehicle.get('registration_number', ''),
-                "vin": vehicle.get('vin', ''),
-                "color": vehicle.get('color', '')
+                "make": safe_str(row.get('AtName')),  # Article name as make
+                "model": safe_str(row.get('FnModel')),
+                "year": 0,  # Year not in your schema
+                "registration_number": safe_str(row.get('FnRegistration')),
+                "vin": safe_str(row.get('FnChassis')),
+                "color": safe_str(row.get('FnColour'))
             },
             "loan": {
-                "loan_amount": float(loan.get('loan_amount', 0) or 0),
-                "interest_rate": float(loan.get('interest_rate', 0) or 0),
-                "tenure_months": int(loan.get('tenure_months', 0) or 0),
-                "emi_amount": float(loan.get('emi_amount', 0) or 0),
-                "total_amount": float(loan.get('total_amount', 0) or 0),
-                "amount_paid": float(loan.get('amount_paid', 0) or 0),
-                "outstanding_amount": float(loan.get('outstanding_amount', 0) or 0)
+                "loan_amount": loan_amount,
+                "interest_rate": interest_rate,
+                "tenure_months": tenure_months,
+                "emi_amount": emi_amount,
+                "total_amount": total_amount,
+                "amount_paid": amount_paid,
+                "outstanding_amount": outstanding
             },
-            "payment_schedule": [
-                {
-                    "sno": int(p.get('sno', i+1)),
-                    "emi_amount": float(p.get('emi_amount', 0) or 0),
-                    "due_date": p.get('due_date', ''),
-                    "payment_received": float(p.get('payment_received', 0) or 0),
-                    "date_received": p.get('date_received') or None,
-                    "delay_days": int(p.get('delay_days', 0) or 0)
-                }
-                for i, p in enumerate(contract_payments)
-            ]
+            "payment_schedule": installments
         }
         
         contracts_data.append(contract_obj)
+        
+        # Progress indicator
+        if (idx + 1) % 10 == 0:
+            print_info(f"Processed {idx + 1}/{len(raw_contracts)} contracts...")
     
     print_success(f"Built {len(contracts_data)} complete contract records")
     return contracts_data
@@ -292,6 +370,7 @@ def generate_mock_data_file(data, output_path):
         ts_content = f"""// Auto-generated by AnjaarFinance SQL Converter
 // Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 // Total contracts: {len(data)}
+// Database: AnjaarFinance
 
 export const MOCK_CONTRACTS = {json.dumps(data, indent=2, default=json_serializer, ensure_ascii=False)};
 
@@ -338,7 +417,11 @@ def main():
         contracts_data = build_contract_data(conn, config)
         
         if not contracts_data:
-            print_warning("No contracts found! Please check your table mappings in config.json")
+            print_warning("No contracts found!")
+            print_info("This could mean:")
+            print_info("  - No records with FnSettled = 2")
+            print_info("  - Database tables are empty")
+            print_info("  - Query conditions don't match any data")
             input("\nPress Enter to exit...")
             return
         
@@ -351,15 +434,21 @@ def main():
         generate_mock_data_file(contracts_data, output_path)
         
         print("\n" + "="*60)
-        print(f"{Colors.GREEN}{Colors.BOLD}SUCCESS! Data export completed.{Colors.END}")
+        print("SUCCESS! Data export completed.")
         print("="*60)
         print(f"\nFiles created:")
         print(f"  1. {output_path} (JSON data)")
         print(f"  2. {output_path.replace('.json', '.ts')} (TypeScript for app)")
         print(f"\nTotal contracts exported: {len(contracts_data)}")
+        print(f"\nStatistics:")
+        live_count = sum(1 for c in contracts_data if c['status'] == 'Live')
+        seized_count = sum(1 for c in contracts_data if c['status'] == 'Seized')
+        print(f"  - Live contracts: {live_count}")
+        print(f"  - Seized contracts: {seized_count}")
+        
         print("\nNext steps:")
-        print("  1. Copy the .ts file to replace app/mockData.ts in your app")
-        print("  2. Rebuild the APK to include the new data")
+        print("  1. Share the .ts file with developer")
+        print("  2. New APK will be built with your data")
         
     except Exception as e:
         print_error(f"An error occurred: {e}")
