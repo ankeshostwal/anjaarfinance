@@ -1,0 +1,10 @@
+{
+  "database": {
+    "server": "DESKTOP-GL59K6T\\SQLEXPRESS",
+    "database": "AnjaarFinance",
+    "trusted_connection": true
+  },
+  "output": {
+    "file_path": "app_data.json"
+  }
+}

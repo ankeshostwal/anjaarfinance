@@ -1,0 +1,60 @@
+name: Build AnjaarFinance APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'app/**'
+      - 'eas.json'
+      - 'app.json'
+      - '.github/workflows/build-apk.yml'
+
+jobs:
+  build:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🔍 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'yarn'
+          cache-dependency-path: 'yarn.lock'
+
+      - name: 🔧 Setup Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: 15.0.12
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 📦 Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: 🔍 Check EAS login
+        run: |
+          echo "Checking Expo authentication..."
+          eas whoami
+
+      - name: 🏗️ Build Android APK
+        run: |
+          echo "Starting EAS build..."
+          echo "Project owner: ankeshostwal"
+          echo "Project slug: anjaarfinance"
+          eas build --platform android --profile preview --non-interactive
+
+      - name: ✅ Build submitted
+        run: |
+          echo "======================================"
+          echo "✅ APK Build Submitted Successfully!"
+          echo "======================================"
+          echo ""
+          echo "📱 Check build status at:"
+          echo "   https://expo.dev/accounts/ankeshostwal/projects/anjaarfinance/builds"
+          echo ""
+          echo "======================================"

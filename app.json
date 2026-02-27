@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "AnjaarFinance",
+    "slug": "anjaarfinance",
+    "owner": "ankeshostwal",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "anjaarfinance",
+    "userInterfaceStyle": "automatic",
+    "android": {
+      "package": "com.anjaarfinance.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#2196F3"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-web-browser"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "7e56b2cc-2a12-4081-8aa9-e4907d2780b2"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/7e56b2cc-2a12-4081-8aa9-e4907d2780b2"
+    }
+  }
+}
