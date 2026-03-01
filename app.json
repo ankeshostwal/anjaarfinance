@@ -4,6 +4,7 @@
     "slug": "anjaarfinance",
     "owner": "ankeshostwal",
     "version": "1.0.0",
+    "runtimeVersion": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "anjaarfinance",
@@ -24,9 +25,6 @@
       "eas": {
         "projectId": "7e56b2cc-2a12-4081-8aa9-e4907d2780b2"
       }
-    },
-    "runtimeVersion": {
-      "policy": "appVersion"
     },
     "updates": {
       "url": "https://u.expo.dev/7e56b2cc-2a12-4081-8aa9-e4907d2780b2"

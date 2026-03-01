@@ -23,9 +23,45 @@ import { MOCK_CONTRACTS } from './mockData';
 const DATA_STORAGE_KEY = '@anjaar_contracts_data';
 const DATA_TIMESTAMP_KEY = '@anjaar_data_timestamp';
 
+// Helper function to format date as DD-MMM-YYYY
+const formatDate = (dateStr: string | null): string => {
+  if (!dateStr || dateStr === '19000101' || dateStr === '') return '-';
+  
+  try {
+    // Handle YYYYMMDD format
+    if (dateStr.length === 8 && !dateStr.includes('-')) {
+      const year = dateStr.substring(0, 4);
+      const month = dateStr.substring(4, 6);
+      const day = dateStr.substring(6, 8);
+      
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const monthIndex = parseInt(month, 10) - 1;
+      
+      if (monthIndex >= 0 && monthIndex < 12) {
+        return `${day}-${months[monthIndex]}-${year}`;
+      }
+    }
+    
+    // Handle other date formats
+    const date = new Date(dateStr);
+    if (!isNaN(date.getTime())) {
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = months[date.getMonth()];
+      const year = date.getFullYear();
+      return `${day}-${month}-${year}`;
+    }
+    
+    return dateStr;
+  } catch (e) {
+    return dateStr;
+  }
+};
+
 interface ContractListItem {
   _id: string;
   contract_number: string;
+  contract_date: string;
   customer_name: string;
   vehicle_number: string;
   file_number: string;
@@ -259,9 +295,14 @@ export default function ContractsScreen() {
           <Text style={styles.detailText}>File: {item.file_number}</Text>
         </View>
         <View style={styles.detailItem}>
-          <Ionicons name="business-outline" size={14} color="#666" />
-          <Text style={styles.detailText} numberOfLines={1}>{item.company_name || 'N/A'}</Text>
+          <Ionicons name="calendar-outline" size={14} color="#666" />
+          <Text style={styles.detailText}>{formatDate(item.contract_date)}</Text>
         </View>
+      </View>
+
+      <View style={styles.cardCompany}>
+        <Ionicons name="business-outline" size={14} color="#666" />
+        <Text style={styles.companyText} numberOfLines={1}>{item.company_name || 'N/A'}</Text>
       </View>
       
       <View style={styles.cardFooter}>
@@ -525,9 +566,11 @@ const styles = StyleSheet.create({
   vehicleNumber: { fontSize: 13, color: '#2196F3', marginTop: 2 },
   statusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
   statusText: { fontSize: 10, fontWeight: '600' },
-  cardDetails: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
+  cardDetails: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
   detailItem: { flexDirection: 'row', alignItems: 'center', flex: 1, gap: 4 },
   detailText: { fontSize: 12, color: '#666', flex: 1 },
+  cardCompany: { flexDirection: 'row', alignItems: 'center', marginBottom: 10, gap: 4 },
+  companyText: { fontSize: 12, color: '#666', flex: 1 },
   cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 10, borderTopWidth: 1, borderTopColor: '#f0f0f0' },
   outstandingLabel: { fontSize: 12, color: '#666' },
   outstandingAmount: { fontSize: 16, fontWeight: 'bold' },
