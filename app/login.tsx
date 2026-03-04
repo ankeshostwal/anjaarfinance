@@ -1,194 +1,115 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ActivityIndicator,
+  View, Text, TextInput, TouchableOpacity,
+  StyleSheet, KeyboardAvoidingView, Platform, Alert,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { MOCK_CREDENTIALS } from './mockData';
 
-const CREDENTIALS_KEY = '@anjaar_credentials';
-const LOGGED_IN_KEY = '@anjaar_logged_in';
+// ── CHANGE THESE TO YOUR PREFERRED LOGIN DETAILS ──
+const APP_USERNAME = 'admin';
+const APP_PASSWORD = 'anjar123';
+// ──────────────────────────────────────────────────
 
 export default function LoginScreen() {
   const router = useRouter();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [showPass, setShowPass] = useState(false);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    checkLoginStatus();
-  }, []);
-
-  const checkLoginStatus = async () => {
-    try {
-      const loggedIn = await AsyncStorage.getItem(LOGGED_IN_KEY);
-      if (loggedIn === 'true') {
-        router.replace('/contracts');
-      }
-    } catch (error) {
-      console.error('Error checking login status:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleLogin = async () => {
+  const handleLogin = () => {
+    setError('');
     if (!username.trim() || !password.trim()) {
-      Alert.alert('Error', 'Please enter username and password');
+      setError('Please enter both username and password.');
       return;
     }
-
-    try {
-      // Get saved credentials or use default
-      let validCredentials = MOCK_CREDENTIALS;
-      const stored = await AsyncStorage.getItem(CREDENTIALS_KEY);
-      if (stored) {
-        validCredentials = JSON.parse(stored);
-      }
-
-      // Validate credentials
-      if (username === validCredentials.username && password === validCredentials.password) {
-        await AsyncStorage.setItem(LOGGED_IN_KEY, 'true');
-        router.replace('/contracts');
-      } else {
-        Alert.alert('Error', 'Invalid username or password');
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Login failed. Please try again.');
+    if (username.trim() === APP_USERNAME && password === APP_PASSWORD) {
+      router.replace('/');
+    } else {
+      setError('Invalid username or password. Please try again.');
     }
   };
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2196F3" />
-      </View>
-    );
-  }
-
   return (
-    <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.content}
-      >
-        <View style={styles.logoContainer}>
-          <View style={styles.logoCircle}>
-            <Ionicons name="business" size={50} color="#2196F3" />
-          </View>
-          <Text style={styles.appName}>Anjaar Finance</Text>
-          <Text style={styles.appTagline}>Contract Management System</Text>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <View style={styles.card}>
+
+        {/* Logo / Title */}
+        <View style={styles.logoBox}>
+          <Text style={styles.logoIcon}>🏦</Text>
+          <Text style={styles.appName}>Anjar Finance</Text>
+          <Text style={styles.appSubtitle}>Vehicle Finance Contracts</Text>
         </View>
 
-        <View style={styles.formContainer}>
-          <Text style={styles.welcomeText}>Welcome Back!</Text>
-          <Text style={styles.signInText}>Sign in to continue</Text>
+        {/* Username */}
+        <Text style={styles.label}>Username</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter username"
+          placeholderTextColor="#AAA"
+          value={username}
+          onChangeText={setUsername}
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
 
-          <View style={styles.inputContainer}>
-            <Ionicons name="person-outline" size={20} color="#666" />
-            <TextInput
-              style={styles.input}
-              placeholder="Username"
-              value={username}
-              onChangeText={setUsername}
-              autoCapitalize="none"
-              placeholderTextColor="#999"
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Ionicons name="lock-closed-outline" size={20} color="#666" />
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-              placeholderTextColor="#999"
-            />
-            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-              <Ionicons name={showPassword ? "eye-off" : "eye"} size={20} color="#666" />
-            </TouchableOpacity>
-          </View>
-
-          <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-            <Text style={styles.loginButtonText}>Login</Text>
-            <Ionicons name="arrow-forward" size={20} color="#fff" />
+        {/* Password */}
+        <Text style={styles.label}>Password</Text>
+        <View style={styles.passwordRow}>
+          <TextInput
+            style={[styles.input, { flex: 1, marginBottom: 0 }]}
+            placeholder="Enter password"
+            placeholderTextColor="#AAA"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={!showPass}
+            autoCapitalize="none"
+          />
+          <TouchableOpacity style={styles.eyeBtn} onPress={() => setShowPass(!showPass)}>
+            <Text style={styles.eyeIcon}>{showPass ? '🙈' : '👁️'}</Text>
           </TouchableOpacity>
-
-          <Text style={styles.defaultCredentials}>
-            Default: admin / admin123
-          </Text>
         </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+
+        {/* Error */}
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+        {/* Login Button */}
+        <TouchableOpacity style={styles.loginBtn} onPress={handleLogin} activeOpacity={0.8}>
+          <Text style={styles.loginBtnText}>Login</Text>
+        </TouchableOpacity>
+
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  content: { flex: 1, justifyContent: 'center', padding: 24 },
-  logoContainer: { alignItems: 'center', marginBottom: 40 },
-  logoCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#E3F2FD',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
+  container:      { flex: 1, backgroundColor: '#EEF2F7', justifyContent: 'center', padding: 24 },
+  card:           { backgroundColor: '#FFF', borderRadius: 16, padding: 24, elevation: 4 },
+
+  logoBox:        { alignItems: 'center', marginBottom: 28 },
+  logoIcon:       { fontSize: 48, marginBottom: 8 },
+  appName:        { fontSize: 22, fontWeight: '700', color: '#1A1A2E' },
+  appSubtitle:    { fontSize: 12, color: '#999', marginTop: 2 },
+
+  label:          { fontSize: 12, fontWeight: '600', color: '#555', marginBottom: 6 },
+  input: {
+    borderWidth: 1, borderColor: '#DDD', borderRadius: 10,
+    paddingHorizontal: 14, paddingVertical: 10,
+    fontSize: 13, color: '#333', marginBottom: 16, backgroundColor: '#FAFAFA',
   },
-  appName: { fontSize: 28, fontWeight: 'bold', color: '#333' },
-  appTagline: { fontSize: 14, color: '#666', marginTop: 4 },
-  formContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 24,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+  passwordRow:    { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
+  eyeBtn:         { paddingHorizontal: 10 },
+  eyeIcon:        { fontSize: 18 },
+
+  errorText:      { color: '#C62828', fontSize: 12, marginBottom: 12, textAlign: 'center' },
+
+  loginBtn: {
+    backgroundColor: '#1976D2', paddingVertical: 14,
+    borderRadius: 10, alignItems: 'center', marginTop: 4,
   },
-  welcomeText: { fontSize: 22, fontWeight: 'bold', color: '#333' },
-  signInText: { fontSize: 14, color: '#666', marginBottom: 24 },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    marginBottom: 16,
-    gap: 10,
-  },
-  input: { flex: 1, paddingVertical: 14, fontSize: 16, color: '#333' },
-  loginButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#2196F3',
-    padding: 16,
-    borderRadius: 10,
-    marginTop: 8,
-    gap: 8,
-  },
-  loginButtonText: { color: '#fff', fontSize: 18, fontWeight: '600' },
-  defaultCredentials: {
-    textAlign: 'center',
-    color: '#999',
-    fontSize: 12,
-    marginTop: 16,
-  },
+  loginBtnText:   { color: '#FFF', fontSize: 15, fontWeight: '700' },
 });

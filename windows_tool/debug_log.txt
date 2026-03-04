@@ -1,14 +1,16 @@
 ======================================== 
 AnjaarFinance Converter Debug Log 
-27-Feb-26 15:32:51.01 
+01-Mar-26 23:06:27.03 
 ======================================== 
  
 Checking Python... 
-Python was not found; run without arguments to install from the Microsoft Store, or disable this shortcut from Settings > Apps > Advanced app settings > App execution aliases.
+'python' is not recognized as an internal or external command,
+operable program or batch file.
  
 Running converter... 
  
-Python was not found; run without arguments to install from the Microsoft Store, or disable this shortcut from Settings > Apps > Advanced app settings > App execution aliases.
+'python' is not recognized as an internal or external command,
+operable program or batch file.
  
 ======================================== 
 Script completed 
