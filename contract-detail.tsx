@@ -386,8 +386,7 @@ export default function ContractDetailScreen() {
             <View style={styles.card}>
               <Text style={styles.sectionTitle}>📞 Collection Follow Up</Text>
               {!contract.followup || contract.followup.length === 0 ? (
-                <Text style={styles.emptyTabText}>No follow-up entries found.{'
-'}Import latest data to see entries.</Text>
+                <Text style={styles.emptyTabText}>No follow-up entries found. Import latest data to see entries.</Text>
               ) : (
                 contract.followup.map((f: any, i: number) => (
                   <View key={i} style={[styles.card, { marginBottom: 6, backgroundColor: '#F9F9FF', elevation: 1 }]}>
