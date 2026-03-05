@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity,
+  View, Text, StyleSheet, FlatList, TouchableOpacity,
   TextInput, Modal, Alert, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,16 +13,52 @@ const DEFAULT_DATA = require('./data/app_data.json');
 const FILE_PATH_KEY = 'imported_data_path';
 const DATA_FILE_URI = FileSystem.documentDirectory + 'app_data_imported.json';
 
-type SortType = 'name' | 'fileno' | 'company' | 'mobile';
+type SortType = 'name' | 'fileno' | 'company';
 type StatusType = 'all' | 'live' | 'seized' | 'closed';
+
+// ── Outstanding: only EMIs where due date has passed AND unpaid ──
+const MONTHS: Record<string, number> = {
+  Jan:0, Feb:1, Mar:2, Apr:3, May:4, Jun:5,
+  Jul:6, Aug:7, Sep:8, Oct:9, Nov:10, Dec:11
+};
+
+function parseDMY(dateStr: string): Date | null {
+  // Parse "10-Feb-2026" format
+  try {
+    const [d, m, y] = dateStr.split('-');
+    const month = MONTHS[m];
+    if (month === undefined) return null;
+    return new Date(parseInt(y), month, parseInt(d));
+  } catch { return null; }
+}
+
+function calcOutstanding(contract: any): number {
+  const schedule = contract.payment_schedule || [];
+  const today = new Date();
+  today.setHours(23, 59, 59, 0);
+
+  return schedule
+    .filter((p: any) => {
+      // Skip if already paid (payment_received > 0)
+      if (p.payment_received && p.payment_received > 0) return false;
+      // Skip if no due date
+      if (!p.due_date) return false;
+      // Parse due date
+      const due = parseDMY(p.due_date);
+      if (!due) return false;
+      // Only include if due date is today or in the past
+      return due <= today;
+    })
+    .reduce((sum: number, p: any) => sum + (p.emi_amount || 0), 0);
+}
 
 export default function ContractsListScreen() {
   const router = useRouter();
 
-  const [contracts, setContracts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [importing, setImporting] = useState(false);
-  const [search, setSearch] = useState('');
+  const [contracts, setContracts]   = useState<any[]>([]);
+  const [loading, setLoading]       = useState(true);
+  const [importing, setImporting]   = useState(false);
+  const [search, setSearch]         = useState('');
   const [showFilter, setShowFilter] = useState(false);
 
   const [statusFilter, setStatusFilter]   = useState<StatusType>('all');
@@ -37,7 +73,6 @@ export default function ContractsListScreen() {
 
   const loadData = async () => {
     try {
-      // Check if we have a previously imported file saved on disk
       const savedPath = await AsyncStorage.getItem(FILE_PATH_KEY);
       if (savedPath) {
         const fileInfo = await FileSystem.getInfoAsync(DATA_FILE_URI);
@@ -49,7 +84,6 @@ export default function ContractsListScreen() {
           return;
         }
       }
-      // Fall back to default bundled data
       setContracts(DEFAULT_DATA.contracts || []);
     } catch (e) {
       setContracts(DEFAULT_DATA.contracts || []);
@@ -61,32 +95,19 @@ export default function ContractsListScreen() {
   const handleImport = async () => {
     try {
       setImporting(true);
-
       const result = await DocumentPicker.getDocumentAsync({
         type: 'application/json',
         copyToCacheDirectory: true,
       });
-
       if (result.canceled) { setImporting(false); return; }
-
-      const sourceUri = result.assets[0].uri;
-
-      // Read and validate first
-      const content = await FileSystem.readAsStringAsync(sourceUri);
+      const content = await FileSystem.readAsStringAsync(result.assets[0].uri);
       const parsed = JSON.parse(content);
-
       if (!parsed.contracts || !Array.isArray(parsed.contracts)) {
         Alert.alert('Invalid File', 'JSON must have a "contracts" array.');
-        setImporting(false);
-        return;
+        setImporting(false); return;
       }
-
-      // Save file directly to app's document directory (no size limit)
-      await FileSystem.copyAsync({ from: sourceUri, to: DATA_FILE_URI });
-
-      // Just save a flag in AsyncStorage (tiny)
+      await FileSystem.copyAsync({ from: result.assets[0].uri, to: DATA_FILE_URI });
       await AsyncStorage.setItem(FILE_PATH_KEY, DATA_FILE_URI);
-
       setContracts(parsed.contracts);
       Alert.alert('Success ✅', `${parsed.contracts.length} contracts imported!`);
     } catch (e: any) {
@@ -96,39 +117,45 @@ export default function ContractsListScreen() {
     }
   };
 
+  // ── Companies list (memoized, only recomputes when contracts change) ──
   const companies = useMemo(() => {
     const set = new Set(contracts.map((c: any) => c.company_name).filter(Boolean));
     return ['all', ...Array.from(set)] as string[];
   }, [contracts]);
 
+  // ── Main filtered + sorted list ──
+  // FlatList + useMemo = fast even with 1000+ records
   const filtered = useMemo(() => {
-    let list = [...contracts];
+    let list = contracts;
 
+    // Status filter
     if (statusFilter !== 'all')
       list = list.filter(c => c.status?.toLowerCase() === statusFilter);
 
+    // Company filter
     if (companyFilter !== 'all')
       list = list.filter(c => c.company_name === companyFilter);
 
+    // Search (name, vehicle, file, mobile)
     if (search.trim()) {
-      const q = search.toLowerCase();
+      const q = search.toLowerCase().trim();
       list = list.filter(c =>
-        c.contract_number?.toLowerCase().includes(q) ||
         c.customer_name?.toLowerCase().includes(q) ||
         c.vehicle_number?.toLowerCase().includes(q) ||
         c.file_number?.toLowerCase().includes(q) ||
-        c.customer?.phone?.includes(q)
+        c.contract_number?.toLowerCase().includes(q) ||
+        c.customer?.phone?.includes(q)              // ✅ mobile search
       );
     }
 
+    // Sort
+    const sorted = [...list];
     switch (sortBy) {
-      case 'name':    list.sort((a, b) => (a.customer_name || '').localeCompare(b.customer_name || '')); break;
-      case 'fileno':  list.sort((a, b) => (a.file_number || '').localeCompare(b.file_number || '')); break;
-      case 'company': list.sort((a, b) => (a.company_name || '').localeCompare(b.company_name || '')); break;
-      case 'mobile':  list.sort((a, b) => (a.customer?.phone || '').localeCompare(b.customer?.phone || '')); break;
+      case 'name':    sorted.sort((a, b) => (a.customer_name || '').localeCompare(b.customer_name || '')); break;
+      case 'fileno':  sorted.sort((a, b) => (a.file_number   || '').localeCompare(b.file_number   || '')); break;
+      case 'company': sorted.sort((a, b) => (a.company_name  || '').localeCompare(b.company_name  || '')); break;
     }
-
-    return list;
+    return sorted;
   }, [contracts, statusFilter, companyFilter, sortBy, search]);
 
   const getStatusColor = (status: string) => {
@@ -166,9 +193,47 @@ export default function ContractsListScreen() {
     sortBy !== 'name',
   ].filter(Boolean).length;
 
-  const handlePress = (contract: any) => {
-    router.push({ pathname: '/contract-detail', params: { contract: JSON.stringify(contract) } });
-  };
+  // ── FlatList renderItem (useCallback prevents re-renders) ──
+  const renderItem = useCallback(({ item, index }: { item: any; index: number }) => {
+    const outstanding = calcOutstanding(item);  // ✅ correct: sum of unpaid EMIs
+    return (
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() => router.push({ pathname: '/contract-detail', params: { contract: JSON.stringify(item) } })}
+        activeOpacity={0.7}
+      >
+        <View style={styles.cardRow}>
+          <Text style={styles.serial}>{index + 1}.</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.customerName}>{item.customer_name}</Text>
+            <Text style={styles.vehicleText}>{item.vehicle_number}</Text>
+          </View>
+          <View style={{ alignItems: 'flex-end' }}>
+            <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) + '18' }]}>
+              <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
+                {item.status?.toUpperCase()}
+              </Text>
+            </View>
+            {item.customer?.phone ? (
+              <Text style={styles.mobileText}>📞 {item.customer.phone}</Text>
+            ) : null}
+          </View>
+        </View>
+
+        <View style={styles.metaRow}>
+          <Text style={styles.metaText}>📄 File: {item.file_number}</Text>
+          <Text style={styles.metaText}>🏢 {item.company_name}</Text>
+        </View>
+
+        <View style={styles.outstandingRow}>
+          <Text style={styles.outstandingLabel}>Outstanding:</Text>
+          <Text style={[styles.outstandingValue, { color: outstanding > 0 ? '#C62828' : '#2E7D32' }]}>
+            ₹{outstanding.toLocaleString('en-IN')}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
+  }, [router]);
 
   if (loading) {
     return (
@@ -201,7 +266,7 @@ export default function ContractsListScreen() {
           <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
             style={styles.searchInput}
-            placeholder="Search by name, vehicle, file, mobile..."
+            placeholder="Name, vehicle, file no, mobile..."
             placeholderTextColor="#999"
             value={search}
             onChangeText={setSearch}
@@ -222,49 +287,19 @@ export default function ContractsListScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* LIST */}
-      <ScrollView contentContainerStyle={styles.list}>
-        {filtered.length === 0 ? (
-          <Text style={styles.emptyText}>No contracts found.</Text>
-        ) : (
-          filtered.map((contract: any, i: number) => (
-            <TouchableOpacity
-              key={contract._id || i}
-              style={styles.card}
-              onPress={() => handlePress(contract)}
-              activeOpacity={0.7}
-            >
-              <View style={styles.cardRow}>
-                <Text style={styles.serial}>{i + 1}.</Text>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.customerName}>{contract.customer_name}</Text>
-                  <Text style={styles.vehicleText}>{contract.vehicle_number}</Text>
-                </View>
-                <View style={[styles.statusBadge, { backgroundColor: getStatusColor(contract.status) + '18' }]}>
-                  <Text style={[styles.statusText, { color: getStatusColor(contract.status) }]}>
-                    {contract.status?.toUpperCase()}
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.metaRow}>
-                <Text style={styles.metaText}>📄 File: {contract.file_number}</Text>
-                <Text style={styles.metaText}>🏢 {contract.company_name}</Text>
-              </View>
-
-              <View style={styles.outstandingRow}>
-                <Text style={styles.outstandingLabel}>Outstanding:</Text>
-                <Text style={[
-                  styles.outstandingValue,
-                  { color: (contract.loan?.outstanding_amount || 0) > 0 ? '#C62828' : '#2E7D32' }
-                ]}>
-                  ₹{(contract.loan?.outstanding_amount || 0).toLocaleString('en-IN')}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          ))
-        )}
-      </ScrollView>
+      {/* ✅ FlatList replaces ScrollView — much faster for large lists */}
+      <FlatList
+        data={filtered}
+        keyExtractor={(item, i) => item._id || String(i)}
+        renderItem={renderItem}
+        contentContainerStyle={styles.list}
+        ListEmptyComponent={<Text style={styles.emptyText}>No contracts found.</Text>}
+        initialNumToRender={15}
+        maxToRenderPerBatch={15}
+        windowSize={10}
+        removeClippedSubviews={true}
+        getItemLayout={(_, index) => ({ length: 120, offset: 120 * index, index })}
+      />
 
       {/* FILTER MODAL */}
       <Modal visible={showFilter} animationType="slide" transparent>
@@ -278,57 +313,57 @@ export default function ContractsListScreen() {
               </TouchableOpacity>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false}>
-              <Text style={styles.filterLabel}>Status</Text>
-              <View style={styles.chipRow}>
-                {(['all', 'live', 'seized', 'closed'] as StatusType[]).map(s => (
-                  <TouchableOpacity
-                    key={s}
-                    style={[styles.chip, pendingStatus === s && styles.chipActive]}
-                    onPress={() => setPendingStatus(s)}
-                  >
-                    <Text style={[styles.chipText, pendingStatus === s && styles.chipTextActive]}>
-                      {s.charAt(0).toUpperCase() + s.slice(1)}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+            {/* STATUS */}
+            <Text style={styles.filterLabel}>Status</Text>
+            <View style={styles.chipRow}>
+              {(['all', 'live', 'seized', 'closed'] as StatusType[]).map(s => (
+                <TouchableOpacity
+                  key={s}
+                  style={[styles.chip, pendingStatus === s && styles.chipActive]}
+                  onPress={() => setPendingStatus(s)}
+                >
+                  <Text style={[styles.chipText, pendingStatus === s && styles.chipTextActive]}>
+                    {s.charAt(0).toUpperCase() + s.slice(1)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
 
-              <Text style={styles.filterLabel}>Company</Text>
-              <View style={styles.chipRow}>
-                {companies.map(c => (
-                  <TouchableOpacity
-                    key={c}
-                    style={[styles.chip, pendingCompany === c && styles.chipActive]}
-                    onPress={() => setPendingCompany(c)}
-                  >
-                    <Text style={[styles.chipText, pendingCompany === c && styles.chipTextActive]}>
-                      {c === 'all' ? 'All' : c}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+            {/* COMPANY */}
+            <Text style={styles.filterLabel}>Company</Text>
+            <View style={styles.chipRow}>
+              {companies.map(c => (
+                <TouchableOpacity
+                  key={c}
+                  style={[styles.chip, pendingCompany === c && styles.chipActive]}
+                  onPress={() => setPendingCompany(c)}
+                >
+                  <Text style={[styles.chipText, pendingCompany === c && styles.chipTextActive]}>
+                    {c === 'all' ? 'All' : c}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
 
-              <Text style={styles.filterLabel}>Sort By</Text>
-              <View style={styles.chipRow}>
-                {([
-                  { key: 'name',    label: 'Name'    },
-                  { key: 'fileno',  label: 'File No' },
-                  { key: 'company', label: 'Company' },
-                  { key: 'mobile',  label: 'Mobile'  },
-                ] as { key: SortType; label: string }[]).map(opt => (
-                  <TouchableOpacity
-                    key={opt.key}
-                    style={[styles.chip, pendingSort === opt.key && styles.chipActive]}
-                    onPress={() => setPendingSort(opt.key)}
-                  >
-                    <Text style={[styles.chipText, pendingSort === opt.key && styles.chipTextActive]}>
-                      {opt.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </ScrollView>
+            {/* SORT BY — no mobile option */}
+            <Text style={styles.filterLabel}>Sort By</Text>
+            <View style={styles.chipRow}>
+              {([
+                { key: 'name',    label: 'Name'    },
+                { key: 'fileno',  label: 'File No' },
+                { key: 'company', label: 'Company' },
+              ] as { key: SortType; label: string }[]).map(opt => (
+                <TouchableOpacity
+                  key={opt.key}
+                  style={[styles.chip, pendingSort === opt.key && styles.chipActive]}
+                  onPress={() => setPendingSort(opt.key)}
+                >
+                  <Text style={[styles.chipText, pendingSort === opt.key && styles.chipTextActive]}>
+                    {opt.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
 
             <View style={styles.modalButtons}>
               <TouchableOpacity style={styles.resetBtn} onPress={resetFilters}>
@@ -363,9 +398,9 @@ const styles = StyleSheet.create({
   filterIcon:         { fontSize: 18 },
   filterBadge:        { position: 'absolute', top: 4, right: 4, backgroundColor: '#1976D2', width: 16, height: 16, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
   filterBadgeText:    { color: '#FFF', fontSize: 9, fontWeight: '700' },
-  list:               { paddingHorizontal: 10, paddingBottom: 20 },
+  list:               { paddingHorizontal: 10, paddingBottom: 20, paddingTop: 4 },
   emptyText:          { textAlign: 'center', marginTop: 40, color: '#999', fontSize: 13 },
-  card:               { backgroundColor: '#FFF', borderRadius: 12, padding: 12, marginBottom: 8, elevation: 2 },
+  card:               { backgroundColor: '#FFF', borderRadius: 12, padding: 12, marginBottom: 8, elevation: 2, height: 112 },
   cardRow:            { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 6 },
   serial:             { fontSize: 12, color: '#999', marginRight: 6, marginTop: 1 },
   customerName:       { fontSize: 13, fontWeight: '700', color: '#1A1A2E' },
@@ -375,10 +410,11 @@ const styles = StyleSheet.create({
   metaRow:            { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
   metaText:           { fontSize: 10, color: '#777' },
   outstandingRow:     { flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 0.5, borderColor: '#EEE', paddingTop: 6 },
+  mobileText:         { fontSize: 10, color: '#666', marginTop: 3 },
   outstandingLabel:   { fontSize: 11, color: '#666' },
   outstandingValue:   { fontSize: 13, fontWeight: '700' },
   modalOverlay:       { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
-  modalSheet:         { backgroundColor: '#FFF', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, maxHeight: '80%' },
+  modalSheet:         { backgroundColor: '#FFF', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20 },
   modalHeader:        { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   modalTitle:         { fontSize: 16, fontWeight: '700' },
   modalClose:         { fontSize: 18, color: '#666' },
