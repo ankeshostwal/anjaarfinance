@@ -208,10 +208,15 @@ export default function ContractsListScreen() {
             <Text style={styles.customerName}>{item.customer_name}</Text>
             <Text style={styles.vehicleText}>{item.vehicle_number}</Text>
           </View>
-          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) + '18' }]}>
-            <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
-              {item.status?.toUpperCase()}
-            </Text>
+          <View style={{ alignItems: 'flex-end' }}>
+            <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) + '18' }]}>
+              <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
+                {item.status?.toUpperCase()}
+              </Text>
+            </View>
+            {item.customer?.phone ? (
+              <Text style={styles.mobileText}>📞 {item.customer.phone}</Text>
+            ) : null}
           </View>
         </View>
 
@@ -293,7 +298,7 @@ export default function ContractsListScreen() {
         maxToRenderPerBatch={15}
         windowSize={10}
         removeClippedSubviews={true}
-        getItemLayout={(_, index) => ({ length: 110, offset: 110 * index, index })}
+        getItemLayout={(_, index) => ({ length: 120, offset: 120 * index, index })}
       />
 
       {/* FILTER MODAL */}
@@ -395,7 +400,7 @@ const styles = StyleSheet.create({
   filterBadgeText:    { color: '#FFF', fontSize: 9, fontWeight: '700' },
   list:               { paddingHorizontal: 10, paddingBottom: 20, paddingTop: 4 },
   emptyText:          { textAlign: 'center', marginTop: 40, color: '#999', fontSize: 13 },
-  card:               { backgroundColor: '#FFF', borderRadius: 12, padding: 12, marginBottom: 8, elevation: 2, height: 102 },
+  card:               { backgroundColor: '#FFF', borderRadius: 12, padding: 12, marginBottom: 8, elevation: 2, height: 112 },
   cardRow:            { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 6 },
   serial:             { fontSize: 12, color: '#999', marginRight: 6, marginTop: 1 },
   customerName:       { fontSize: 13, fontWeight: '700', color: '#1A1A2E' },
@@ -405,6 +410,7 @@ const styles = StyleSheet.create({
   metaRow:            { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
   metaText:           { fontSize: 10, color: '#777' },
   outstandingRow:     { flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 0.5, borderColor: '#EEE', paddingTop: 6 },
+  mobileText:         { fontSize: 10, color: '#666', marginTop: 3 },
   outstandingLabel:   { fontSize: 11, color: '#666' },
   outstandingValue:   { fontSize: 13, fontWeight: '700' },
   modalOverlay:       { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },

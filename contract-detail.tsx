@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams } from 'expo-router';
 import * as FileSystem from 'expo-file-system/legacy';
 
-type TabType = 'client' | 'loan' | 'schedule' | 'interest' | 'followup';
+type TabType = 'client' | 'loan' | 'schedule' | 'ledger' | 'interest' | 'followup';
 const { width } = Dimensions.get('window');
 
 // ── PHOTOS: placed in DocumentDirectory/photos/ folder ──
@@ -268,6 +268,43 @@ export default function ContractDetailScreen() {
             </View>
           )}
 
+          {/* ════ LEDGER TAB ════ */}
+          {activeTab === 'ledger' && (
+            <View style={styles.card}>
+              <Text style={styles.sectionTitle}>📒 Finance Ledger</Text>
+              {!contract.ledger || contract.ledger.length === 0 ? (
+                <Text style={styles.emptyTabText}>No ledger entries found.</Text>
+              ) : (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  <View>
+                    <View style={styles.tableHeader}>
+                      <HeaderCell text="Date"      width={88} />
+                      <HeaderCell text="Type"      width={44} />
+                      <HeaderCell text="Voucher"   width={64} />
+                      <HeaderCell text="Debit"     width={68} />
+                      <HeaderCell text="Credit"    width={68} />
+                      <HeaderCell text="Balance"   width={72} />
+                      <HeaderCell text="Narration" width={130} />
+                    </View>
+                    {contract.ledger.map((l: any, i: number) => (
+                      <View key={i} style={[styles.tableRow, {
+                        backgroundColor: l.debit > 0 ? '#FFF8E1' : l.credit > 0 ? '#E8F5E9' : i % 2 === 0 ? '#FAFAFA' : '#FFF'
+                      }]}>
+                        <Cell text={String(l.voucher_date    ?? '')} width={88}  center />
+                        <Cell text={String(l.voucher_type    ?? '')} width={44}  center />
+                        <Cell text={String(l.voucher_no      ?? '')} width={64}  center />
+                        <Cell text={l.debit  > 0 ? String(l.debit)  : '—'}      width={68} />
+                        <Cell text={l.credit > 0 ? String(l.credit) : '—'}      width={68} />
+                        <Cell text={String(l.running_balance ?? '')}             width={72}  bold />
+                        <Cell text={String(l.narration       ?? '')}             width={130} />
+                      </View>
+                    ))}
+                  </View>
+                </ScrollView>
+              )}
+            </View>
+          )}
+
           {/* ════ INTEREST TAB ════ */}
           {activeTab === 'interest' && (
             <View>
@@ -347,17 +384,26 @@ export default function ContractDetailScreen() {
           {/* ════ FOLLOWUP TAB ════ */}
           {activeTab === 'followup' && (
             <View style={styles.card}>
-              <Text style={styles.sectionTitle}>📞 Follow Up History</Text>
+              <Text style={styles.sectionTitle}>📞 Collection Follow Up</Text>
               {!contract.followup || contract.followup.length === 0 ? (
-                <Text style={styles.emptyTabText}>No follow-up entries found.</Text>
+                <Text style={styles.emptyTabText}>No follow-up entries found.{'
+'}Import latest data to see entries.</Text>
               ) : (
                 contract.followup.map((f: any, i: number) => (
-                  <View key={i} style={[styles.infoRow, { flexDirection: 'column', alignItems: 'flex-start', paddingVertical: 8 }]}>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
-                      <Text style={[styles.infoLabel, { fontWeight: '600' }]}>#{f.serial} — {f.run_date}</Text>
-                      <Text style={styles.infoLabel}>Next: {f.cont_date}</Text>
+                  <View key={i} style={[styles.card, { marginBottom: 6, backgroundColor: '#F9F9FF', elevation: 1 }]}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <Text style={{ fontSize: 11, fontWeight: '700', color: '#1976D2' }}>
+                        #{f.serial}  📅 {f.run_date}
+                      </Text>
+                      <Text style={{ fontSize: 11, color: '#E65100', fontWeight: '600' }}>
+                        Next: {f.cont_date}
+                      </Text>
                     </View>
-                    {f.remarks ? <Text style={[styles.infoValue, { textAlign: 'left', marginTop: 2 }]}>{f.remarks}</Text> : null}
+                    {f.remarks ? (
+                      <Text style={{ fontSize: 11, color: '#444', lineHeight: 16 }}>{f.remarks}</Text>
+                    ) : (
+                      <Text style={{ fontSize: 11, color: '#BBB' }}>No remarks</Text>
+                    )}
                   </View>
                 ))
               )}
@@ -368,10 +414,10 @@ export default function ContractDetailScreen() {
 
         {/* ── BOTTOM TABS ── */}
         <View style={styles.bottomTabs}>
-          {(['client', 'loan', 'schedule', 'interest', 'followup'] as TabType[]).map(tab => (
+          {(['client', 'loan', 'schedule', 'ledger', 'interest', 'followup'] as TabType[]).map(tab => (
             <TouchableOpacity key={tab} onPress={() => setActiveTab(tab)} style={styles.tabBtn}>
               <Text style={[styles.bottomTabText, activeTab === tab && styles.bottomActiveText]}>
-                {tab === 'interest' ? 'INTEREST' : tab.toUpperCase()}
+                {tab === 'schedule' ? 'SCHED' : tab === 'interest' ? 'OD INT' : tab === 'followup' ? 'FOLLOW' : tab.toUpperCase()}
               </Text>
               {activeTab === tab && <View style={styles.tabIndicator} />}
             </TouchableOpacity>

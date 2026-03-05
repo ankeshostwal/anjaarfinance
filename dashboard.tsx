@@ -62,9 +62,24 @@ export default function DashboardScreen() {
         setRoiPercent(s.roiPercent || '2');
       }
 
-      // Load followups
-      const fu = await AsyncStorage.getItem(FOLLOWUP_KEY);
-      if (fu) setFollowups(JSON.parse(fu));
+      // Load followups from contract data (SQL imported)
+      // Flatten all followup entries from all contracts
+      const allContracts = parsed?.contracts || DEFAULT_DATA.contracts || [];
+      const allFollowups: any[] = [];
+      allContracts.forEach((c: any) => {
+        (c.followup || []).forEach((f: any) => {
+          allFollowups.push({
+            ...f,
+            customerName: c.customer_name,
+            contractNo:   c.contract_number,
+            phone:        c.customer?.phone || '',
+            file_number:  c.file_number,
+          });
+        });
+      });
+      // Sort by cont_date descending
+      allFollowups.sort((a, b) => (b.cont_date || '').localeCompare(a.cont_date || ''));
+      setFollowups(allFollowups);
 
     } catch (e) {
       setContracts(DEFAULT_DATA.contracts || []);
@@ -321,39 +336,30 @@ export default function DashboardScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* Add new followup */}
-            <TouchableOpacity
-              style={styles.addFollowupBtn}
-              onPress={() => setShowAddFollowup(true)}
-            >
-              <Text style={styles.addFollowupBtnText}>+ Add New Followup</Text>
-            </TouchableOpacity>
-
-            {/* All followups list */}
+            {/* View only — data from SQL */}
             <ScrollView style={{ marginTop: 10 }}>
               {followups.length === 0 ? (
-                <Text style={styles.emptyText}>No followup entries yet.</Text>
+                <View style={styles.emptyBox}>
+                  <Text style={styles.emptyText}>No followup entries found.</Text>
+                  <Text style={styles.emptyHint}>Import latest data from SQL to see followups.</Text>
+                </View>
               ) : (
-                followups.map(f => (
-                  <View key={f.id} style={styles.followupCard}>
+                followups.map((f: any, i: number) => (
+                  <View key={i} style={styles.followupCard}>
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.followupName}>{f.customerName}</Text>
-                      <Text style={styles.followupMeta}>File: {f.contractNo}</Text>
-                      <Text style={styles.followupDate}>📅 Promise: {f.promiseDate}</Text>
+                      <Text style={styles.followupName}>{f.customerName || f.customer_name}</Text>
+                      <Text style={styles.followupMeta}>File: {f.contractNo || f.file_number}</Text>
+                      <Text style={styles.followupDate}>📅 Promise: {f.promiseDate || f.cont_date}</Text>
+                      {f.remarks ? <Text style={styles.followupRemarks}>{f.remarks}</Text> : null}
                     </View>
-                    <View style={styles.followupActions}>
-                      {f.phone ? (
-                        <TouchableOpacity
-                          style={styles.callBtn}
-                          onPress={() => Linking.openURL(`tel:${f.phone}`)}
-                        >
-                          <Text style={styles.callBtnText}>📞</Text>
-                        </TouchableOpacity>
-                      ) : null}
-                      <TouchableOpacity onPress={() => removeFollowup(f.id)}>
-                        <Text style={styles.removeBtn}>✕</Text>
+                    {f.phone ? (
+                      <TouchableOpacity
+                        style={styles.callBtn}
+                        onPress={() => Linking.openURL(`tel:${f.phone}`)}
+                      >
+                        <Text style={styles.callBtnText}>📞 Call</Text>
                       </TouchableOpacity>
-                    </View>
+                    ) : null}
                   </View>
                 ))
               )}
@@ -362,59 +368,7 @@ export default function DashboardScreen() {
         </View>
       </Modal>
 
-      {/* ══ ADD FOLLOWUP MODAL ══ */}
-      <Modal visible={showAddFollowup} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalSheet}>
-            <Text style={styles.modalTitle}>+ Add Followup</Text>
-
-            <Text style={styles.modalLabel}>Search Contract</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Type name, file no, vehicle..."
-              value={searchFollowup}
-              onChangeText={setSearchFollowup}
-            />
-
-            <ScrollView style={{ maxHeight: 200, marginBottom: 12 }}>
-              {filteredContracts.map((c: any) => (
-                <TouchableOpacity
-                  key={c._id}
-                  style={[
-                    styles.contractPickItem,
-                    selectedContract?._id === c._id && styles.contractPickItemActive,
-                  ]}
-                  onPress={() => setSelectedContract(c)}
-                >
-                  <Text style={[
-                    styles.contractPickText,
-                    selectedContract?._id === c._id && { color: '#FFF' }
-                  ]}>
-                    {c.customer_name} — {c.file_number}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-
-            <Text style={styles.modalLabel}>Promise Date (YYYY-MM-DD)</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder={today.toISOString().split('T')[0]}
-              value={promiseDate}
-              onChangeText={setPromiseDate}
-            />
-
-            <View style={styles.modalButtons}>
-              <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowAddFollowup(false)}>
-                <Text style={styles.cancelBtnText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.saveBtn} onPress={addFollowup}>
-                <Text style={styles.saveBtnText}>Add</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      {/* Add followup removed — view only from SQL data */}
 
     </SafeAreaView>
   );
@@ -476,7 +430,10 @@ const styles = StyleSheet.create({
   callBtnText:            { fontSize: 12, color: '#2E7D32', fontWeight: '600' },
   removeBtn:              { fontSize: 16, color: '#CCC', paddingHorizontal: 4 },
 
-  emptyText:              { textAlign: 'center', color: '#999', marginTop: 20, fontSize: 13 },
+  emptyText:              { textAlign: 'center', color: '#999', marginTop: 10, fontSize: 13 },
+  emptyBox:               { alignItems: 'center', marginTop: 20 },
+  emptyHint:              { textAlign: 'center', color: '#BBB', marginTop: 6, fontSize: 11 },
+  followupRemarks:        { fontSize: 11, color: '#888', marginTop: 3, fontStyle: 'italic' },
 
   addFollowupBtn:         { backgroundColor: '#1976D2', borderRadius: 10, padding: 12, alignItems: 'center' },
   addFollowupBtnText:     { color: '#FFF', fontWeight: '600', fontSize: 13 },
