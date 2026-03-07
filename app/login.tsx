@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet, KeyboardAvoidingView, Platform,
+  StyleSheet, KeyboardAvoidingView, Platform, ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const DEFAULT_USERNAME = 'admin';
 const DEFAULT_PASSWORD = 'anjar123';
-const CREDS_KEY = 'app_credentials';
+const CREDS_KEY        = 'app_credentials';
+const SESSION_KEY      = 'user_session';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -16,40 +17,48 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [error, setError]       = useState('');
+  const [checking, setChecking] = useState(true);
 
   const [savedUsername, setSavedUsername] = useState(DEFAULT_USERNAME);
   const [savedPassword, setSavedPassword] = useState(DEFAULT_PASSWORD);
 
   useEffect(() => {
-    // Check registration first
-    AsyncStorage.getItem('registration_data').then(reg => {
-      if (!reg) {
-        router.replace('/register');
-        return;
-      }
-    });
-
-    AsyncStorage.getItem(CREDS_KEY).then(val => {
-      if (val) {
-        const creds = JSON.parse(val);
-        setSavedUsername(creds.username || DEFAULT_USERNAME);
-        setSavedPassword(creds.password || DEFAULT_PASSWORD);
-      }
-    });
+    const init = async () => {
+      try {
+        const val = await AsyncStorage.getItem(CREDS_KEY);
+        if (val) {
+          const creds = JSON.parse(val);
+          setSavedUsername(creds.username || DEFAULT_USERNAME);
+          setSavedPassword(creds.password || DEFAULT_PASSWORD);
+        }
+      } catch (e) {}
+      finally { setChecking(false); }
+    };
+    init();
   }, []);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     setError('');
     if (!username.trim() || !password.trim()) {
       setError('Please enter both username and password.');
       return;
     }
     if (username.trim() === savedUsername && password === savedPassword) {
+      // ✅ Save session so index.tsx can skip login next time
+      await AsyncStorage.setItem(SESSION_KEY, 'active');
       router.replace('/dashboard');
     } else {
       setError('Invalid username or password.');
     }
   };
+
+  if (checking) {
+    return (
+      <View style={styles.centerLoader}>
+        <ActivityIndicator size="large" color="#1976D2" />
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
@@ -102,20 +111,21 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container:      { flex: 1, backgroundColor: '#EEF2F7', justifyContent: 'center', padding: 24 },
-  card:           { backgroundColor: '#FFF', borderRadius: 16, padding: 24, elevation: 4 },
-  logoBox:        { alignItems: 'center', marginBottom: 28 },
-  logoIcon:       { fontSize: 48, marginBottom: 8 },
-  appName:        { fontSize: 22, fontWeight: '700', color: '#1A1A2E' },
-  appSubtitle:    { fontSize: 12, color: '#999', marginTop: 2 },
-  label:          { fontSize: 12, fontWeight: '600', color: '#555', marginBottom: 6 },
-  input:          { borderWidth: 1, borderColor: '#DDD', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, fontSize: 13, color: '#333', marginBottom: 16, backgroundColor: '#FAFAFA' },
-  passwordRow:    { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
-  eyeBtn:         { paddingHorizontal: 10 },
-  eyeIcon:        { fontSize: 18 },
-  errorText:      { color: '#C62828', fontSize: 12, marginBottom: 12, textAlign: 'center' },
-  loginBtn:       { backgroundColor: '#1976D2', paddingVertical: 14, borderRadius: 10, alignItems: 'center', marginTop: 4 },
-  loginBtnText:   { color: '#FFF', fontSize: 15, fontWeight: '700' },
-  changePwdLink:  { marginTop: 16, alignItems: 'center' },
-  changePwdText:  { fontSize: 12, color: '#1976D2', textDecorationLine: 'underline' },
+  container:     { flex: 1, backgroundColor: '#EEF2F7', justifyContent: 'center', padding: 24 },
+  centerLoader:  { flex: 1, backgroundColor: '#EEF2F7', justifyContent: 'center', alignItems: 'center' },
+  card:          { backgroundColor: '#FFF', borderRadius: 16, padding: 24, elevation: 4 },
+  logoBox:       { alignItems: 'center', marginBottom: 28 },
+  logoIcon:      { fontSize: 48, marginBottom: 8 },
+  appName:       { fontSize: 22, fontWeight: '700', color: '#1A1A2E' },
+  appSubtitle:   { fontSize: 12, color: '#999', marginTop: 2 },
+  label:         { fontSize: 12, fontWeight: '600', color: '#555', marginBottom: 6 },
+  input:         { borderWidth: 1, borderColor: '#DDD', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, fontSize: 13, color: '#333', marginBottom: 16, backgroundColor: '#FAFAFA' },
+  passwordRow:   { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
+  eyeBtn:        { paddingHorizontal: 10 },
+  eyeIcon:       { fontSize: 18 },
+  errorText:     { color: '#C62828', fontSize: 12, marginBottom: 12, textAlign: 'center' },
+  loginBtn:      { backgroundColor: '#1976D2', paddingVertical: 14, borderRadius: 10, alignItems: 'center', marginTop: 4 },
+  loginBtnText:  { color: '#FFF', fontSize: 15, fontWeight: '700' },
+  changePwdLink: { marginTop: 16, alignItems: 'center' },
+  changePwdText: { fontSize: 12, color: '#1976D2', textDecorationLine: 'underline' },
 });

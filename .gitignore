@@ -106,3 +106,4 @@ android-sdk/ -e
 # Environment files
 *.env
 *.env.*
+generated_keys.json 

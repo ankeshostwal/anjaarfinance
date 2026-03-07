@@ -153,9 +153,11 @@ export default function ContractDetailScreen() {
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.sectionTitle}>👤 Borrower</Text>
-                    <InfoRow label="Name"   value={contract.customer?.name} />
-                    <InfoRow label="Father" value={contract.customer?.father} />
-                    <InfoRow label="Mobile" value={contract.customer?.phone} highlight />
+                    <InfoRow label="Name"    value={contract.customer?.name} />
+                    <InfoRow label="Father"  value={contract.customer?.father} />
+                    <InfoRow label="Mobile 1" value={contract.customer?.phone}  highlight />
+                    {contract.customer?.phone2 ? <InfoRow label="Mobile 2" value={contract.customer?.phone2} highlight /> : null}
+                    {contract.customer?.phone3 ? <InfoRow label="Mobile 3" value={contract.customer?.phone3} highlight /> : null}
                   </View>
                 </View>
                 <InfoRow label="Address" value={contract.customer?.address} />
@@ -172,9 +174,11 @@ export default function ContractDetailScreen() {
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.sectionTitle}>🤝 Guarantor</Text>
-                    <InfoRow label="Name"   value={contract.guarantor?.name} />
-                    <InfoRow label="Father" value={contract.guarantor?.father} />
-                    <InfoRow label="Mobile" value={contract.guarantor?.phone} highlight />
+                    <InfoRow label="Name"    value={contract.guarantor?.name} />
+                    <InfoRow label="Father"  value={contract.guarantor?.father} />
+                    <InfoRow label="Mobile 1" value={contract.guarantor?.phone}  highlight />
+                    {contract.guarantor?.phone2 ? <InfoRow label="Mobile 2" value={contract.guarantor?.phone2} highlight /> : null}
+                    {contract.guarantor?.phone3 ? <InfoRow label="Mobile 3" value={contract.guarantor?.phone3} highlight /> : null}
                   </View>
                 </View>
                 <InfoRow label="Address" value={contract.guarantor?.address} />
