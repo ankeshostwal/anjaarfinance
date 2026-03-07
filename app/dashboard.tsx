@@ -8,7 +8,7 @@ import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system/legacy';
 
-const DEFAULT_DATA   = require('./data/app_data.json');
+
 const FILE_PATH_KEY  = 'imported_data_path';
 const DATA_FILE_URI  = FileSystem.documentDirectory + 'app_data_imported.json';
 const SETTINGS_KEY   = 'od_settings';
@@ -47,7 +47,7 @@ export default function DashboardScreen() {
         }
       }
 
-      const allContracts: any[] = parsed?.contracts || DEFAULT_DATA.contracts || [];
+      const allContracts: any[] = parsed?.contracts || [];
       setContracts(allContracts);
 
       // Load OD settings
@@ -77,7 +77,7 @@ export default function DashboardScreen() {
       setFollowups(allFollowups);
 
     } catch (e) {
-      setContracts(DEFAULT_DATA.contracts || []);
+      setContracts([]);
     } finally {
       setLoading(false);
     }
