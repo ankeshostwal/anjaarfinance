@@ -9,7 +9,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 
-const DEFAULT_DATA  = require('./data/app_data.json');
 const FILE_PATH_KEY = 'imported_data_path';
 const DATA_FILE_URI = FileSystem.documentDirectory + 'app_data_imported.json';
 
@@ -84,9 +83,9 @@ export default function ContractsListScreen() {
           return;
         }
       }
-      setContracts(DEFAULT_DATA.contracts || []);
+      setContracts([]);
     } catch (e) {
-      setContracts(DEFAULT_DATA.contracts || []);
+      setContracts([]);
     } finally {
       setLoading(false);
     }
