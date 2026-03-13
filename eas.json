@@ -1,14 +1,14 @@
 {
   "cli": {
-    "version": ">= 5.2.0"
+    "version": ">= 5.2.0",
+    "requireCommit": true
   },
   "build": {
     "preview": {
       "android": {
         "buildType": "apk"
       },
-      "distribution": "internal",
-      "node": "22.11.0"
+      "distribution": "internal"
     }
   }
 }
