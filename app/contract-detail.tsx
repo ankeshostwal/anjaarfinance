@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  Dimensions, Image, TextInput, Modal, Alert,
+  Dimensions, Image, TextInput, Modal, Alert, Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams } from 'expo-router';
@@ -155,7 +155,7 @@ export default function ContractDetailScreen() {
                     <Text style={styles.sectionTitle}>👤 Borrower</Text>
                     <InfoRow label="Name"   value={contract.customer?.name} />
                     <InfoRow label="Father" value={contract.customer?.father} />
-                    <InfoRow label="Mobile" value={contract.customer?.phone} highlight />
+                    <PhoneRow phones={[contract.customer?.phone, contract.customer?.phone2, contract.customer?.phone3]} />
                   </View>
                 </View>
                 <InfoRow label="Address" value={contract.customer?.address} />
@@ -174,7 +174,7 @@ export default function ContractDetailScreen() {
                     <Text style={styles.sectionTitle}>🤝 Guarantor</Text>
                     <InfoRow label="Name"   value={contract.guarantor?.name} />
                     <InfoRow label="Father" value={contract.guarantor?.father} />
-                    <InfoRow label="Mobile" value={contract.guarantor?.phone} highlight />
+                    <PhoneRow phones={[contract.guarantor?.phone, contract.guarantor?.phone2, contract.guarantor?.phone3]} />
                   </View>
                 </View>
                 <InfoRow label="Address" value={contract.guarantor?.address} />
@@ -200,7 +200,6 @@ export default function ContractDetailScreen() {
               <InfoRow label="Loan Amount"   value={`₹${(contract.loan?.loan_amount || 0).toLocaleString('en-IN')}`} />
               <InfoRow label="Interest Rate" value={`${contract.loan?.interest_rate || 0}%`} />
               <InfoRow label="Tenure"        value={`${contract.loan?.tenure_months || 0} months`} />
-              <InfoRow label="EMI Amount"    value={`₹${(contract.loan?.emi_amount || 0).toLocaleString('en-IN')}`} />
               <InfoRow label="Total Payable" value={`₹${(contract.loan?.total_amount || 0).toLocaleString('en-IN')}`} />
               <View style={styles.divider} />
               <InfoRow label="Amount Paid"   value={`₹${(contract.loan?.amount_paid || 0).toLocaleString('en-IN')}`} highlight />
@@ -416,7 +415,7 @@ export default function ContractDetailScreen() {
           {(['client', 'loan', 'schedule', 'ledger', 'interest', 'followup'] as TabType[]).map(tab => (
             <TouchableOpacity key={tab} onPress={() => setActiveTab(tab)} style={styles.tabBtn}>
               <Text style={[styles.bottomTabText, activeTab === tab && styles.bottomActiveText]}>
-                {tab === 'schedule' ? 'SCHED' : tab === 'interest' ? 'OD INT' : tab === 'followup' ? 'FOLLOW' : tab.toUpperCase()}
+                {tab === 'schedule' ? 'EMI(S)' : tab === 'interest' ? 'OD INT' : tab === 'followup' ? 'FOLLOW' : tab.toUpperCase()}
               </Text>
               {activeTab === tab && <View style={styles.tabIndicator} />}
             </TouchableOpacity>
@@ -477,6 +476,32 @@ const InfoRow = ({ label, value, highlight, danger }: any) => (
     </Text>
   </View>
 );
+
+const PhoneRow = ({ phones }: { phones: (string | undefined)[] }) => {
+  const valid = phones.filter((p): p is string => !!p && String(p).trim() !== '');
+  if (valid.length === 0) return (
+    <View style={styles.infoRow}>
+      <Text style={styles.infoLabel}>Mobile</Text>
+      <Text style={styles.infoValue}>—</Text>
+    </View>
+  );
+  return (
+    <View style={[styles.infoRow, { alignItems: 'flex-start' }]}>
+      <Text style={styles.infoLabel}>Mobile</Text>
+      <View style={{ flex: 2, flexDirection: 'row', flexWrap: 'wrap', gap: 6, justifyContent: 'flex-end' }}>
+        {valid.map((phone, i) => (
+          <TouchableOpacity
+            key={i}
+            style={styles.callChip}
+            onPress={() => Linking.openURL(`tel:${phone}`)}
+          >
+            <Text style={styles.callChipText}>📞 {phone}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+};
 
 const HeaderCell = ({ text, width }: any) => (
   <Text style={[styles.headerCell, { width }]} numberOfLines={1}>{text}</Text>
@@ -553,4 +578,6 @@ const styles = StyleSheet.create({
   resetBtnText:         { fontSize: 13, color: '#666' },
   applyBtn:             { flex: 2, paddingVertical: 12, borderRadius: 10, backgroundColor: '#1976D2', alignItems: 'center' },
   applyBtnText:         { fontSize: 13, color: '#FFF', fontWeight: '600' },
+  callChip:             { backgroundColor: '#E8F5E9', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 14, borderWidth: 1, borderColor: '#C8E6C9' },
+  callChipText:         { fontSize: 11, color: '#2E7D32', fontWeight: '600' },
 });

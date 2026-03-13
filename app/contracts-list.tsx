@@ -420,7 +420,7 @@ const styles = StyleSheet.create({
   outstandingLabel: { fontSize: 11, color: '#666' },
   outstandingValue: { fontSize: 13, fontWeight: '700' },
   modalOverlay:     { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
-  modalSheet:       { backgroundColor: '#FFF', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 16, paddingBottom: 12 },
+  modalSheet:       { backgroundColor: '#FFF', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 40 },
   modalHeader:      { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   modalTitle:       { fontSize: 16, fontWeight: '700' },
   modalClose:       { fontSize: 18, color: '#666' },
