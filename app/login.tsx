@@ -56,7 +56,7 @@ export default function LoginScreen() {
       <View style={styles.card}>
         <View style={styles.logoBox}>
           <Text style={styles.logoIcon}>🏦</Text>
-          <Text style={styles.appName}>Anjar Finance</Text>
+          <Text style={styles.appName}>AnjaarFinance</Text>
           <Text style={styles.appSubtitle}>Vehicle Finance Contracts</Text>
         </View>
 
