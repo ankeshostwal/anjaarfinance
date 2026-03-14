@@ -36,9 +36,10 @@ async function validateKeyLocally(inputKey: string): Promise<boolean> {
 }
 
 // ── Firebase validation: key must exist + be active ──
-async function validateKeyOnFirebase(inputKey: string): Promise<{
+async function validateKeyOnFirebase(inputKey: string, currentDeviceId: string): Promise<{
   valid: boolean;
   active: boolean;
+  deviceLocked: boolean;
   docId: string | null;
   owner: string;
 }> {
@@ -48,20 +49,28 @@ async function validateKeyOnFirebase(inputKey: string): Promise<{
     const snapshot = await getDocs(q);
 
     if (snapshot.empty) {
-      return { valid: false, active: false, docId: null, owner: '' };
+      return { valid: false, active: false, deviceLocked: false, docId: null, owner: '' };
     }
 
     const docSnap = snapshot.docs[0];
     const data    = docSnap.data();
+
+    // ── Device lock check ──
+    // If key already has a device registered AND it's different from current device
+    // then this key is being used on an unauthorized device
+    const registeredDevice = data.device || '';
+    const deviceLocked = registeredDevice !== '' &&
+                         registeredDevice !== currentDeviceId;
+
     return {
-      valid:  true,
-      active: data.active === true,
-      docId:  docSnap.id,
-      owner:  data.owner || '',
+      valid:        true,
+      active:       data.active === true,
+      deviceLocked: deviceLocked,
+      docId:        docSnap.id,
+      owner:        data.owner || '',
     };
   } catch (e) {
-    // If Firebase is unreachable, fail safe — deny access
-    return { valid: false, active: false, docId: null, owner: '' };
+    return { valid: false, active: false, deviceLocked: false, docId: null, owner: '' };
   }
 }
 
@@ -120,8 +129,8 @@ export default function RegisterScreen() {
         return;
       }
 
-      // Step 2: Firebase check (online — is key active?)
-      const firebaseResult = await validateKeyOnFirebase(key.trim());
+      // Step 2: Firebase check (online — is key active + device check)
+      const firebaseResult = await validateKeyOnFirebase(key.trim(), deviceId);
 
       if (!firebaseResult.valid) {
         Alert.alert(
@@ -136,6 +145,15 @@ export default function RegisterScreen() {
         Alert.alert(
           'Access Revoked 🚫',
           'This registration key has been deactivated.\nPlease contact your administrator.'
+        );
+        setLoading(false);
+        return;
+      }
+
+      if (firebaseResult.deviceLocked) {
+        Alert.alert(
+          'Device Not Authorised ❌',
+          'This key is already registered on another device.\nEach key works on one device only.\nPlease contact your administrator for a new key.'
         );
         setLoading(false);
         return;
