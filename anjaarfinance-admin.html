@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AnjaarFinance — Key Management</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F4F6F8; min-height: 100vh; }
+
+  /* ── Login Screen ── */
+  #login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+  .login-card { background: #FFF; border-radius: 16px; padding: 32px; width: 340px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+  .login-logo { text-align: center; margin-bottom: 24px; }
+  .login-logo .icon { font-size: 48px; }
+  .login-logo h1 { font-size: 20px; font-weight: 700; color: #1A1A2E; margin-top: 8px; }
+  .login-logo p { font-size: 12px; color: #999; margin-top: 4px; }
+  .login-label { font-size: 12px; font-weight: 600; color: #555; margin-bottom: 6px; display: block; }
+  .login-input { width: 100%; border: 1px solid #DDD; border-radius: 10px; padding: 10px 14px; font-size: 13px; color: #333; background: #FAFAFA; margin-bottom: 16px; }
+  .login-input:focus { outline: none; border-color: #1976D2; }
+  .login-btn { width: 100%; background: #1976D2; color: #FFF; border: none; border-radius: 10px; padding: 13px; font-size: 14px; font-weight: 700; cursor: pointer; }
+  .login-btn:hover { background: #1565C0; }
+  .login-error { color: #C62828; font-size: 12px; text-align: center; margin-bottom: 12px; }
+
+  /* ── Main Panel ── */
+  #main-screen { display: none; max-width: 860px; margin: 0 auto; padding: 24px 16px; }
+  .top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  .top-bar-left { display: flex; align-items: center; gap: 12px; }
+  .top-logo { width: 42px; height: 42px; background: #E3F2FD; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+  .top-title { font-size: 18px; font-weight: 700; color: #1A1A2E; }
+  .top-sub { font-size: 12px; color: #999; margin-top: 2px; }
+  .logout-btn { background: #FFEBEE; color: #C62828; border: none; border-radius: 20px; padding: 7px 16px; font-size: 12px; font-weight: 600; cursor: pointer; }
+
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+  .stat-card { background: #FFF; border-radius: 12px; padding: 14px 16px; border: 1px solid #F0F0F0; }
+  .stat-label { font-size: 11px; color: #999; margin-bottom: 4px; }
+  .stat-value { font-size: 26px; font-weight: 700; }
+  .stat-value.blue  { color: #1976D2; }
+  .stat-value.green { color: #2E7D32; }
+  .stat-value.red   { color: #C62828; }
+
+  .section { background: #FFF; border-radius: 14px; padding: 20px; margin-bottom: 16px; border: 1px solid #F0F0F0; }
+  .section-title { font-size: 14px; font-weight: 700; color: #1A1A2E; margin-bottom: 16px; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .form-full { grid-column: 1 / -1; }
+  label.field-label { font-size: 11px; font-weight: 600; color: #777; display: block; margin-bottom: 4px; }
+  input.field { width: 100%; border: 1px solid #DDD; border-radius: 8px; padding: 9px 12px; font-size: 13px; color: #333; background: #FAFAFA; }
+  input.field:focus { outline: none; border-color: #1976D2; }
+  .add-btn { background: #1976D2; color: #FFF; border: none; border-radius: 8px; padding: 10px 20px; font-size: 13px; font-weight: 600; cursor: pointer; margin-top: 4px; }
+  .add-btn:hover { background: #1565C0; }
+  .add-btn:disabled { background: #90CAF9; cursor: not-allowed; }
+
+  .key-list { display: flex; flex-direction: column; gap: 8px; }
+  .key-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 10px; border: 1px solid #F0F0F0; background: #FAFAFA; transition: opacity 0.2s; }
+  .key-row.blocked { opacity: 0.5; background: #FFF8F8; }
+  .avatar { width: 36px; height: 36px; border-radius: 50%; background: #E3F2FD; color: #1976D2; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+  .key-info { flex: 1; min-width: 0; }
+  .key-name { font-size: 13px; font-weight: 600; color: #1A1A2E; }
+  .key-code { font-size: 11px; color: #888; font-family: monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 280px; }
+  .key-meta { font-size: 11px; color: #AAA; margin-top: 1px; }
+  .badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .badge-active   { background: #E8F5E9; color: #2E7D32; }
+  .badge-blocked  { background: #FFEBEE; color: #C62828; }
+  .badge-admin    { background: #E3F2FD; color: #1976D2; }
+  .action-btn { border: none; border-radius: 8px; padding: 5px 12px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .btn-block    { background: #FFEBEE; color: #C62828; }
+  .btn-unblock  { background: #E8F5E9; color: #2E7D32; }
+  .btn-block:hover   { background: #FFCDD2; }
+  .btn-unblock:hover { background: #C8E6C9; }
+
+  .empty { text-align: center; padding: 32px; color: #BBB; font-size: 13px; }
+  .loading { text-align: center; padding: 20px; color: #999; font-size: 13px; }
+  .notice { background: #FFF8E1; border: 1px solid #FFE082; border-radius: 10px; padding: 10px 14px; font-size: 12px; color: #7B5800; margin-bottom: 16px; }
+  .search-box { width: 100%; border: 1px solid #DDD; border-radius: 8px; padding: 9px 12px; font-size: 13px; color: #333; background: #FAFAFA; margin-bottom: 14px; }
+  .search-box:focus { outline: none; border-color: #1976D2; }
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN SCREEN ══ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="icon">🏦</div>
+      <h1>AnjaarFinance</h1>
+      <p>Admin — Key Management</p>
+    </div>
+    <div id="login-error" class="login-error" style="display:none"></div>
+    <label class="login-label">Admin Password</label>
+    <input class="login-input" id="admin-pass" type="password" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')doLogin()" />
+    <button class="login-btn" onclick="doLogin()">Login</button>
+  </div>
+</div>
+
+<!-- ══ MAIN PANEL ══ -->
+<div id="main-screen">
+  <div class="top-bar">
+    <div class="top-bar-left">
+      <div class="top-logo">🏦</div>
+      <div>
+        <div class="top-title">AnjaarFinance — Key Management</div>
+        <div class="top-sub">Welcome, Ankesh Ostwal &nbsp;·&nbsp; Admin</div>
+      </div>
+    </div>
+    <button class="logout-btn" onclick="doLogout()">Logout</button>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card"><div class="stat-label">Total keys issued</div><div class="stat-value blue" id="stat-total">—</div></div>
+    <div class="stat-card"><div class="stat-label">Active</div><div class="stat-value green" id="stat-active">—</div></div>
+    <div class="stat-card"><div class="stat-label">Blocked</div><div class="stat-value red" id="stat-blocked">—</div></div>
+  </div>
+
+  <!-- Add New Key -->
+  <div class="section">
+    <div class="section-title">Issue new key</div>
+    <div class="form-grid">
+      <div>
+        <label class="field-label">Person's name *</label>
+        <input class="field" id="inp-name" placeholder="e.g. Abhishek" />
+      </div>
+      <div>
+        <label class="field-label">Phone (optional)</label>
+        <input class="field" id="inp-phone" placeholder="e.g. 9876543210" />
+      </div>
+      <div class="form-full">
+        <label class="field-label">Registration key * (generate using keygen.py)</label>
+        <input class="field" id="inp-key" placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXXXXX" style="font-family:monospace;letter-spacing:1px" />
+      </div>
+    </div>
+    <button class="add-btn" id="add-btn" onclick="addKey()">+ Add Key</button>
+    <span id="add-msg" style="font-size:12px;margin-left:12px;color:#2E7D32"></span>
+  </div>
+
+  <!-- Keys List -->
+  <div class="section">
+    <div class="section-title">All keys</div>
+    <input class="search-box" id="search" placeholder="Search by name or key..." oninput="renderKeys()" />
+    <div class="key-list" id="keys-list">
+      <div class="loading">Loading keys from Firebase...</div>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp }                          from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getFirestore, collection, getDocs,
+           addDoc, updateDoc, doc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+  // ── Your Firebase config ──
+  const firebaseConfig = {
+    apiKey:            "AIzaSyD8Buv_Gzm97Q9E9gpl7kZmOaG_hGHFCQI",
+    authDomain:        "anjaarfinance-865f7.firebaseapp.com",
+    projectId:         "anjaarfinance-865f7",
+    storageBucket:     "anjaarfinance-865f7.firebasestorage.app",
+    messagingSenderId: "798309386568",
+    appId:             "1:798309386568:web:ed5decf4b7b4cf2c25cb7d",
+  };
+
+  const app  = initializeApp(firebaseConfig);
+  const db   = getFirestore(app);
+
+  // ── Admin password (change this to your own secret) ──
+  const ADMIN_PASSWORD = "Ankesh@2026";
+
+  let allKeys = [];
+
+  // ── Login ──
+  window.doLogin = function() {
+    const pass = document.getElementById('admin-pass').value;
+    if (pass === ADMIN_PASSWORD) {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('main-screen').style.display  = 'block';
+      loadKeys();
+    } else {
+      const err = document.getElementById('login-error');
+      err.textContent = 'Incorrect password. Try again.';
+      err.style.display = 'block';
+    }
+  };
+
+  window.doLogout = function() {
+    document.getElementById('main-screen').style.display  = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('admin-pass').value = '';
+  };
+
+  // ── Load all keys from Firestore ──
+  async function loadKeys() {
+    try {
+      const snapshot = await getDocs(collection(db, 'keys'));
+      allKeys = snapshot.docs.map(d => ({ docId: d.id, ...d.data() }));
+      renderKeys();
+      updateStats();
+    } catch (e) {
+      document.getElementById('keys-list').innerHTML =
+        '<div class="empty">Could not load keys. Check your internet connection.</div>';
+    }
+  }
+
+  // ── Render keys list ──
+  window.renderKeys = function() {
+    const search = document.getElementById('search').value.toLowerCase();
+    const list   = document.getElementById('keys-list');
+    let filtered = allKeys;
+    if (search) {
+      filtered = allKeys.filter(k =>
+        k.owner?.toLowerCase().includes(search) ||
+        k.key?.toLowerCase().includes(search)
+      );
+    }
+    if (filtered.length === 0) {
+      list.innerHTML = '<div class="empty">No keys found.</div>';
+      return;
+    }
+    list.innerHTML = filtered.map(k => {
+      const ini = (k.owner || '?').split(' ').slice(0,2).map(w => w[0]?.toUpperCase() || '').join('');
+      const isAnkesh = k.owner?.toLowerCase().includes('ankesh');
+      const date = k.addedOn || k.activatedOn || 'Unknown';
+      const device = k.device ? `· Device: ${k.device.slice(0,10)}...` : '';
+      return `
+        <div class="key-row ${k.active ? '' : 'blocked'}">
+          <div class="avatar">${ini}</div>
+          <div class="key-info">
+            <div class="key-name">${k.owner || 'Unknown'}${isAnkesh ? ' <span style="font-size:11px;background:#E3F2FD;color:#1976D2;padding:1px 7px;border-radius:10px;margin-left:4px">Admin</span>' : ''}</div>
+            <div class="key-code">${k.key || '—'}</div>
+            <div class="key-meta">Added: ${date} ${device}</div>
+          </div>
+          <span class="badge ${k.active ? 'badge-active' : 'badge-blocked'}">${k.active ? 'Active' : 'Blocked'}</span>
+          <div>
+            ${isAnkesh
+              ? k.active
+                ? `<button class="action-btn btn-block" onclick="toggleAdminKey('${k.docId}')">Block (Emergency)</button>`
+                : `<button class="action-btn btn-unblock" onclick="toggleKey('${k.docId}', true)">Unblock</button>`
+              : k.active
+                ? `<button class="action-btn btn-block"   onclick="toggleKey('${k.docId}', false)">Block</button>`
+                : `<button class="action-btn btn-unblock" onclick="toggleKey('${k.docId}', true)">Unblock</button>`
+            }
+          </div>
+        </div>`;
+    }).join('');
+  };
+
+  // ── Update stats ──
+  function updateStats() {
+    const active  = allKeys.filter(k => k.active).length;
+    document.getElementById('stat-total').textContent   = allKeys.length;
+    document.getElementById('stat-active').textContent  = active;
+    document.getElementById('stat-blocked').textContent = allKeys.length - active;
+  }
+
+  // ── Emergency block for admin own key ──
+  window.toggleAdminKey = async function(docId) {
+    const confirmed = confirm(
+      '⚠️ EMERGENCY BLOCK\n\n' +
+      'This will block YOUR OWN key.\n' +
+      'You will still be able to access this admin panel.\n' +
+      'But the app on your phone will show Access Revoked.\n\n' +
+      'Use this ONLY if your phone is stolen.\n\n' +
+      'Are you sure?'
+    );
+    if (!confirmed) return;
+    try {
+      await updateDoc(doc(db, 'keys', docId), { active: false });
+      const k = allKeys.find(k => k.docId === docId);
+      if (k) k.active = false;
+      renderKeys();
+      updateStats();
+      alert('✅ Your key has been blocked. The app on your stolen phone can no longer be used.');
+    } catch (e) {
+      alert('Could not block key. Check your internet connection.');
+    }
+  };
+
+  // ── Block / Unblock key ──
+  window.toggleKey = async function(docId, newState) {
+    try {
+      await updateDoc(doc(db, 'keys', docId), { active: newState });
+      const k = allKeys.find(k => k.docId === docId);
+      if (k) k.active = newState;
+      renderKeys();
+      updateStats();
+    } catch (e) {
+      alert('Could not update key. Check your internet.');
+    }
+  };
+
+  // ── Add new key ──
+  window.addKey = async function() {
+    const name = document.getElementById('inp-name').value.trim();
+    const phone = document.getElementById('inp-phone').value.trim();
+    const key   = document.getElementById('inp-key').value.trim().toUpperCase();
+    const msg   = document.getElementById('add-msg');
+    const btn   = document.getElementById('add-btn');
+
+    if (!name) { alert('Please enter the person\'s name.'); return; }
+    if (!key)  { alert('Please enter the registration key.'); return; }
+    if (key.split('-').length !== 5) { alert('Key format must be XXXXX-XXXXX-XXXXX-XXXXX-XXXXXXXX'); return; }
+    if (allKeys.find(k => k.key === key)) { alert('This key already exists!'); return; }
+
+    btn.disabled  = true;
+    btn.textContent = 'Adding...';
+    try {
+      const newDoc = await addDoc(collection(db, 'keys'), {
+        owner:   name,
+        phone:   phone,
+        key:     key,
+        active:  true,
+        addedOn: new Date().toISOString().split('T')[0],
+        device:  '',
+        addedBy: 'Ankesh Ostwal',
+      });
+      allKeys.push({ docId: newDoc.id, owner: name, phone, key, active: true, addedOn: new Date().toISOString().split('T')[0] });
+      document.getElementById('inp-name').value  = '';
+      document.getElementById('inp-phone').value = '';
+      document.getElementById('inp-key').value   = '';
+      msg.textContent = `Key for ${name} added successfully!`;
+      setTimeout(() => msg.textContent = '', 3000);
+      renderKeys();
+      updateStats();
+    } catch (e) {
+      alert('Could not add key. Check your internet connection.');
+    } finally {
+      btn.disabled    = false;
+      btn.textContent = '+ Add Key';
+    }
+  };
+</script>
+</body>
+</html>
