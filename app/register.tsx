@@ -8,19 +8,23 @@ import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Application from 'expo-application';
 import * as Crypto from 'expo-crypto';
+import { db } from './firebaseConfig';
+import {
+  collection, query, where, getDocs, updateDoc, doc,
+} from 'firebase/firestore';
 
 const SECRET_SALT   = "ANJAARFINANCE2026ANKESH";
 const REG_KEY_STORE = "registration_data";
 
+// ── SHA256 local validation (same as before) ──
 async function sha256(text: string): Promise<string> {
   const digest = await Crypto.digestStringAsync(
-    Crypto.CryptoDigestAlgorithm.SHA256,
-    text
+    Crypto.CryptoDigestAlgorithm.SHA256, text
   );
   return digest.toUpperCase();
 }
 
-async function validateKey(inputKey: string): Promise<boolean> {
+async function validateKeyLocally(inputKey: string): Promise<boolean> {
   const parts = inputKey.trim().toUpperCase().split('-');
   if (parts.length !== 5) return false;
   const signature = parts[4];
@@ -29,6 +33,36 @@ async function validateKey(inputKey: string): Promise<boolean> {
   const fullHash  = await sha256(combined);
   const expected  = fullHash.substring(0, 8);
   return signature === expected;
+}
+
+// ── Firebase validation: key must exist + be active ──
+async function validateKeyOnFirebase(inputKey: string): Promise<{
+  valid: boolean;
+  active: boolean;
+  docId: string | null;
+  owner: string;
+}> {
+  try {
+    const keysRef  = collection(db, 'keys');
+    const q        = query(keysRef, where('key', '==', inputKey.trim().toUpperCase()));
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+      return { valid: false, active: false, docId: null, owner: '' };
+    }
+
+    const docSnap = snapshot.docs[0];
+    const data    = docSnap.data();
+    return {
+      valid:  true,
+      active: data.active === true,
+      docId:  docSnap.id,
+      owner:  data.owner || '',
+    };
+  } catch (e) {
+    // If Firebase is unreachable, fail safe — deny access
+    return { valid: false, active: false, docId: null, owner: '' };
+  }
 }
 
 async function getDeviceId(): Promise<string> {
@@ -44,18 +78,16 @@ async function getDeviceId(): Promise<string> {
 
 export default function RegisterScreen() {
   const router = useRouter();
-  const [key, setKey]           = useState('');
-  const [loading, setLoading]   = useState(false);
+  const [key, setKey]         = useState('');
+  const [loading, setLoading] = useState(false);
   const [deviceId, setDeviceId] = useState('');
 
   useEffect(() => {
-    // ✅ Check if already registered — if so, skip straight to login
+    // Already registered → go to login
     const checkReg = async () => {
       try {
         const reg = await AsyncStorage.getItem(REG_KEY_STORE);
-        if (reg) {
-          router.replace('/login');
-        }
+        if (reg) router.replace('/login');
       } catch {}
     };
     checkReg();
@@ -80,32 +112,73 @@ export default function RegisterScreen() {
     }
     setLoading(true);
     try {
-      const isValid = await validateKey(key.trim());
-      if (!isValid) {
+      // Step 1: Local SHA256 check (fast, offline)
+      const localValid = await validateKeyLocally(key.trim());
+      if (!localValid) {
         Alert.alert('Invalid Key ❌', 'This registration key is not valid.\nPlease check and try again.');
         setLoading(false);
         return;
       }
+
+      // Step 2: Firebase check (online — is key active?)
+      const firebaseResult = await validateKeyOnFirebase(key.trim());
+
+      if (!firebaseResult.valid) {
+        Alert.alert(
+          'Key Not Found ❌',
+          'This key is not registered in our system.\nPlease contact your administrator.'
+        );
+        setLoading(false);
+        return;
+      }
+
+      if (!firebaseResult.active) {
+        Alert.alert(
+          'Access Revoked 🚫',
+          'This registration key has been deactivated.\nPlease contact your administrator.'
+        );
+        setLoading(false);
+        return;
+      }
+
+      // Step 3: Save device ID to Firebase so admin can track
+      if (firebaseResult.docId) {
+        try {
+          await updateDoc(doc(db, 'keys', firebaseResult.docId), {
+            device:       deviceId,
+            lastUsed:     new Date().toISOString(),
+            activatedOn:  new Date().toISOString().split('T')[0],
+          });
+        } catch {}
+      }
+
+      // Step 4: Save registration locally
       const regData = {
         key:          key.trim().toUpperCase(),
-        deviceId:     deviceId,
+        deviceId,
+        owner:        firebaseResult.owner,
         registeredOn: new Date().toISOString().split('T')[0],
       };
       await AsyncStorage.setItem(REG_KEY_STORE, JSON.stringify(regData));
+
       Alert.alert(
         'Activated! ✅',
-        'App successfully registered.\nEnjoy using AnjaarFinance!',
+        `App successfully registered${firebaseResult.owner ? ` for ${firebaseResult.owner}` : ''}.\nEnjoy using AnjaarFinance!`,
         [{ text: 'Continue', onPress: () => router.replace('/login') }]
       );
+
     } catch (e) {
-      Alert.alert('Error', 'Something went wrong. Please try again.');
+      Alert.alert('Error', 'Something went wrong. Please check your internet and try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
       <View style={styles.card}>
         <View style={styles.logoBox}>
           <Text style={styles.logoIcon}>🏦</Text>
@@ -129,7 +202,12 @@ export default function RegisterScreen() {
           autoCorrect={false}
           maxLength={33}
         />
-        <TouchableOpacity style={styles.activateBtn} onPress={handleActivate} disabled={loading} activeOpacity={0.8}>
+        <TouchableOpacity
+          style={styles.activateBtn}
+          onPress={handleActivate}
+          disabled={loading}
+          activeOpacity={0.8}
+        >
           {loading
             ? <ActivityIndicator color="#FFF" />
             : <Text style={styles.activateBtnText}>Activate App</Text>
